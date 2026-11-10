@@ -17,9 +17,9 @@
     </header>
 
     <div class="p-4 max-w-md mx-auto">
-        <!-- 1. Cart Items Summary Section (Moved to Top) -->
+        <!-- 1. Cart Items Summary Section (Top) -->
         <div class="bg-white p-4 rounded-lg shadow-sm border mb-4">
-            <h3 class="font-bold text-md mb-2 border-b pb-1">🛒 ရွေးချယ်ထားသော မီးနူးများ</h3>
+            <h3 class="font-bold text-md mb-2 border-b pb-1">🛒 ရွေးချယ်ထားသော ခြင်းတောင်း</h3>
             <div id="cart-items-list" class="space-y-2 mb-3 text-sm">
                 <p class="text-gray-400 text-center py-2">ခြင်းတောင်းထဲတွင် ပစ္စည်းမရှိသေးပါ။</p>
             </div>
@@ -85,13 +85,17 @@
 
         function renderProducts() {
             const list = document.getElementById('product-list');
+            if (!products || products.length === 0) {
+                list.innerHTML = `<p class="col-span-2 text-center text-gray-400 py-4">မီနူးများ ရယူနေပါသည်...</p>`;
+                return;
+            }
             list.innerHTML = products.map(p => `
                 <div class="bg-white p-3 rounded-lg shadow-sm border flex flex-col justify-between">
                     <img src="${p.ImageURL}" class="w-full h-28 object-cover rounded-md mb-2">
                     <h3 class="font-semibold text-sm">${p.ItemName}</h3>
                     <p class="text-red-600 font-bold text-sm mb-2">${p.Price} ကျပ်</p>
                     <div class="flex items-center justify-between bg-gray-100 rounded p-1">
-                        <button onclick="updateQty('${p.ItemID}', -1)" class="bg-white px-2 py-0.5 rounded shadow text-xs font-bold">-</button>
+                        <button onclick="updateQty('${p.ItemID}', -1)" class="bg-white px-2 py-0.5 rounded shadow text-xs font-bold text-gray-700">-</button>
                         <span id="qty-${p.ItemID}" class="text-xs font-bold">${cart[p.ItemID] ? cart[p.ItemID].qty : 0}</span>
                         <button onclick="updateQty('${p.ItemID}', 1)" class="bg-red-500 text-white px-2 py-0.5 rounded shadow text-xs font-bold">+</button>
                     </div>
@@ -167,4 +171,10 @@
                 alert("ကျေးဇူးပြု၍ မီနူးပစ္စည်း အနည်းဆုံး တစ်ခု ရွေးချယ်ပါ");
                 return;
             }
-            alert("အော်ဒါ
+            alert("အော်ဒါအောင်မြင်စွာ တင်ပြီးပါပြီ!");
+        }
+
+        fetchData();
+    </script>
+</body>
+</html>
