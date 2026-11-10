@@ -21,7 +21,7 @@
 
     <div class="p-4 max-w-md mx-auto space-y-4">
 
-        <!-- 🛒 ခြင်းတောင်းအကျဉ်းချုပ် (အမြဲတမ်း အပေါ်ဆုံးတွင် ထားရှိထားသည်) -->
+        <!-- 🛒 ခြင်းတောင်းအကျဉ်းချုပ် (အမြဲတမ်း အပေါ်ဆုံးတွင် ထားရှိသည်) -->
         <div class="bg-white p-4 rounded-xl shadow-sm border">
             <h3 class="font-bold text-base mb-2 text-gray-700 border-b pb-2 flex justify-between items-center">
                 <span>🛒 ရွေးချယ်ထားသော ခြင်းတောင်း</span>
@@ -65,12 +65,28 @@
                 </div>
 
                 <div>
-                    <label class="block text-xs font-semibold text-gray-600 mb-1">ပို့ဆောင်မည့် အမျိုးအစား</label>
-                    <select id="service-select" onchange="calculateTotal()" class="w-full p-2.5 border rounded-lg text-sm bg-gray-50 focus:bg-white transition">
+                    <label class="block text-xs font-semibold text-gray-600 mb-1">ပို့ဆောင်မည့် အမျိုးအစား <span class="text-red-500">*</span></label>
+                    <select id="service-select" onchange="toggleServiceOptions()" class="w-full p-2.5 border rounded-lg text-sm bg-gray-50 focus:bg-white transition">
+                        <option value="">ပို့ဆောင်မှု အမျိုးအစား ရွေးပါ...</option>
                         <option value="normal">ပုံမှန်ပို့</option>
                         <option value="express">အမြန်ပို့</option>
-                        <option value="slow">အနှေးပို့</option>
                     </select>
+                </div>
+
+                <!-- ပုံမှန်ပို့ ရွေးချယ်မှ ပေါ်လာမည့် အချိန်ဇယား (Batch) -->
+                <div id="normal-schedule-container" class="hidden bg-blue-50 p-3 rounded-xl border border-blue-200 space-y-1">
+                    <label class="block font-bold text-blue-900 text-xs sm:text-sm mb-1">⏰ ပုံမှန်ပို့ အချိန်ဇယား ရွေးချယ်ပါ -</label>
+                    <select id="shoppingNormalScheduleSelect" class="w-full p-2.5 border rounded-xl bg-white font-bold text-gray-800 focus:ring-2 focus:ring-blue-400 outline-none text-xs sm:text-sm">
+                        <option value="batch1" data-cutoff="08:30">မနက် ၈:၃၀ အော်ဒါပိတ် - ၉:၀၀ စပို့ (ရောက်ရှိချိန်: ၉:၀၀ မှ ၁၁:၀၀ အတွင်း)</option>
+                        <option value="batch2" data-cutoff="10:30">မနက် ၁၀:၃၀ အော်ဒါပိတ် - ၁၁:၀၀ စပို့ (ရောက်ရှိချိန်: ၁၁:၀၀ မှ ၁:၀၀ အတွင်း)</option>
+                        <option value="batch3" data-cutoff="12:30">နေ့လယ် ၁၂:၃၀ အော်ဒါပိတ် - ၁:၀၀ စပို့ (ရောက်ရှိချိန်: ၁:၀၀ မှ ၃:၀၀ အတွင်း)</option>
+                        <option value="batch4" data-cutoff="14:30">ညနေ ၂:၃၀ အော်ဒါပိတ် - ၃:၀၀ စပို့ (ရောက်ရှိချိန်: ၃:၀၀ မှ ၅:၀၀ အတွင်း)</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-gray-600 mb-1">တည်နေရာ (Lat/Long သို့မဟုတ် Google Map Link)</label>
+                    <input type="text" id="cust-location" placeholder="ဥပမာ: 16.2891, 97.6321 သို့မဟုတ် Map Link..." class="w-full p-2.5 border rounded-lg text-sm bg-gray-50 focus:bg-white transition">
                 </div>
 
                 <div>
@@ -121,25 +137,25 @@
         };
 
         const deliveryRates = {
-            "A-B": { express: 4500, normal: 3000, slow: 2000 }, "B-A": { express: 4500, normal: 3000, slow: 2000 },
-            "A-C": { express: 4500, normal: 3000, slow: 2000 }, "C-A": { express: 4500, normal: 3000, slow: 2000 },
-            "A-D": { express: 5500, normal: 3500, slow: 2500 }, "D-A": { express: 5500, normal: 3500, slow: 2500 },
-            "A-E": { express: 9000, normal: 4500, slow: 3500 }, "E-A": { express: 9000, normal: 4500, slow: 3500 },
-            "A-F": { express: 9000, normal: 4500, slow: 3500 }, "F-A": { express: 9000, normal: 4500, slow: 3500 },
-            "A-G": { express: 9000, normal: 4500, slow: 3500 }, "G-A": { express: 9000, normal: 4500, slow: 3500 },
-            "B-E": { express: 6500, normal: 4000, slow: 3000 }, "E-B": { express: 6500, normal: 4000, slow: 3000 },
-            "B-F": { express: 6500, normal: 4000, slow: 3000 }, "F-B": { express: 6500, normal: 4000, slow: 3000 },
-            "B-G": { express: 6500, normal: 4000, slow: 3000 }, "G-B": { express: 6500, normal: 4000, slow: 3000 },
-            "C-D": { express: 6500, normal: 4000, slow: 3000 }, "D-C": { express: 6500, normal: 4000, slow: 3000 },
-            "C-E": { express: 9000, normal: 4500, slow: 3500 }, "E-C": { express: 9000, normal: 4500, slow: 3500 },
-            "C-F": { express: 9000, normal: 4500, slow: 3500 }, "F-C": { express: 9000, normal: 4500, slow: 3500 },
-            "C-G": { express: 9000, normal: 4500, slow: 3500 }, "G-C": { express: 9000, normal: 4500, slow: 3500 },
-            "D-E": { express: 5500, normal: 3500, slow: 2500 }, "E-D": { express: 5500, normal: 3500, slow: 2500 },
-            "D-F": { express: 9000, normal: 4500, slow: 3500 }, "F-D": { express: 9000, normal: 4500, slow: 3500 },
-            "D-G": { express: 9000, normal: 4500, slow: 3500 }, "G-D": { express: 9000, normal: 4500, slow: 3500 },
-            "E-F": { express: 9000, normal: 4500, slow: 3500 }, "F-E": { express: 9000, normal: 4500, slow: 3500 },
-            "E-G": { express: 9000, normal: 4500, slow: 3500 }, "G-E": { express: 9000, normal: 4500, slow: 3500 },
-            "F-G": { express: 6500, normal: 4000, slow: 3000 }, "G-F": { express: 6500, normal: 4000, slow: 3000 }
+            "A-B": { express: 4500, normal: 3000 }, "B-A": { express: 4500, normal: 3000 },
+            "A-C": { express: 4500, normal: 3000 }, "C-A": { express: 4500, normal: 3000 },
+            "A-D": { express: 5500, normal: 3500 }, "D-A": { express: 5500, normal: 3500 },
+            "A-E": { express: 9000, normal: 4500 }, "E-A": { express: 9000, normal: 4500 },
+            "A-F": { express: 9000, normal: 4500 }, "F-A": { express: 9000, normal: 4500 },
+            "A-G": { express: 9000, normal: 4500 }, "G-A": { express: 9000, normal: 4500 },
+            "B-E": { express: 6500, normal: 4000 }, "E-B": { express: 6500, normal: 4000 },
+            "B-F": { express: 6500, normal: 4000 }, "F-B": { express: 6500, normal: 4000 },
+            "B-G": { express: 6500, normal: 4000 }, "G-B": { express: 6500, normal: 4000 },
+            "C-D": { express: 6500, normal: 4000 }, "D-C": { express: 6500, normal: 4000 },
+            "C-E": { express: 9000, normal: 4500 }, "E-C": { express: 9000, normal: 4500 },
+            "C-F": { express: 9000, normal: 4500 }, "F-C": { express: 9000, normal: 4500 },
+            "C-G": { express: 9000, normal: 4500 }, "G-C": { express: 9000, normal: 4500 },
+            "D-E": { express: 5500, normal: 3500 }, "E-D": { express: 5500, normal: 3500 },
+            "D-F": { express: 9000, normal: 4500 }, "F-D": { express: 9000, normal: 4500 },
+            "D-G": { express: 9000, normal: 4500 }, "G-D": { express: 9000, normal: 4500 },
+            "E-F": { express: 9000, normal: 4500 }, "F-E": { express: 9000, normal: 4500 },
+            "E-G": { express: 9000, normal: 4500 }, "G-E": { express: 9000, normal: 4500 },
+            "F-G": { express: 6500, normal: 4000 }, "G-F": { express: 6500, normal: 4000 }
         };
 
         function checkAdjacent(pWard, dWard) {
@@ -153,6 +169,19 @@
                 ['စမ်းကြီးရပ်ကွက်', 'စမ်းကြီးရပ်ကွက်']
             ];
             return pairs.some(pair => (pair[0] === pWard && pair[1] === dWard) || (pair[0] === dWard && pair[1] === pWard));
+        }
+
+        // ပုံမှန်ပို့ ရွေးချယ်မှ အချိန်ဇယားဘောက်စ် ပေါ်လာစေရန်
+        function toggleServiceOptions() {
+            const serviceType = document.getElementById('service-select').value;
+            const scheduleContainer = document.getElementById('normal-schedule-container');
+            
+            if (serviceType === 'normal') {
+                scheduleContainer.classList.remove('hidden');
+            } else {
+                scheduleContainer.classList.add('hidden');
+            }
+            calculateTotal();
         }
 
         // View နှစ်ခု အကူးအပြောင်း ပြုလုပ်ပေးမည့် Function
@@ -288,15 +317,14 @@
             const selectedOption = wardSelect.options[wardSelect.selectedIndex];
             const serviceType = document.getElementById('service-select').value;
 
-            if (selectedOption && selectedOption.value) {
+            if (selectedOption && selectedOption.value && serviceType) {
                 const customerWard = selectedOption.value;
                 const customerZone = selectedOption.getAttribute('data-zone') || getZone(customerWard);
                 const isAdj = checkAdjacent(shopWard, customerWard);
 
                 if (shopZone === customerZone || isAdj) {
                     if (serviceType === 'express') deliveryFee = 3500;
-                    else if (serviceType === 'normal') deliveryFee = 2500;
-                    else deliveryFee = 1500;
+                    else deliveryFee = 2500; // normal
                 } else {
                     let key1 = `${shopZone}-${customerZone}`;
                     let key2 = `${customerZone}-${shopZone}`;
@@ -309,7 +337,7 @@
                 }
             }
 
-            if (subtotal > 0 && selectedOption.value) {
+            if (subtotal > 0 && selectedOption.value && serviceType) {
                 cartList.innerHTML += `
                     <div class="flex justify-between items-center pt-1 text-gray-500 text-xs font-semibold">
                         <span>🚚 ပို့ဆောင်ခ (${selectedOption.value})</span>
@@ -318,7 +346,7 @@
                 `;
             }
 
-            let grandTotal = subtotal + (subtotal > 0 && selectedOption.value ? deliveryFee : 0);
+            let grandTotal = subtotal + (subtotal > 0 && selectedOption.value && serviceType ? deliveryFee : 0);
             document.getElementById('total-price').innerText = grandTotal.toLocaleString() + " ကျပ်";
         }
 
@@ -327,14 +355,35 @@
             const phone = document.getElementById('cust-phone').value.trim();
             const ward = document.getElementById('ward-select').value;
             const service = document.getElementById('service-select').value;
+            const scheduleSelect = document.getElementById('shoppingNormalScheduleSelect');
+            const scheduleText = (service === 'normal' && scheduleSelect) ? scheduleSelect.options[scheduleSelect.selectedIndex].text : "အမြန်ပို့ (ချက်ချင်း)";
+            const location = document.getElementById('cust-location').value.trim();
             const address = document.getElementById('cust-address').value.trim();
 
-            if(!name || !phone || !ward) {
-                alert("ကျေးဇူးပြု၍ ဝယ်သူအမည်၊ ဖုန်းနံပါတ်နှင့် ရပ်ကွက်ကို ဖြည့်စွက်ပါ");
+            // မဖြစ်မနေ ဖြည့်ရမည့် အချက်အလက်များ စစ်ဆေးခြင်း
+            if(!name) {
+                alert("ကျေးဇူးပြု၍ ဝယ်သူအမည် ဖြည့်စွက်ပါ");
+                document.getElementById('cust-name').focus();
+                return;
+            }
+            if(!phone) {
+                alert("ကျေးဇူးပြု၍ ဖုန်းနံပါတ် ဖြည့်စွက်ပါ");
+                document.getElementById('cust-phone').focus();
+                return;
+            }
+            if(!ward) {
+                alert("ကျေးဇူးပြု၍ သင့်ရပ်ကွက်ကို ရွေးချယ်ပါ");
+                document.getElementById('ward-select').focus();
+                return;
+            }
+            if(!service) {
+                alert("ကျေးဇူးပြု၍ ပို့ဆောင်မည့် အမျိုးအစား (ပုံမှန်ပို့ သို့မဟုတ် အမြန်ပို့) ကို ရွေးချယ်ပါ။");
+                document.getElementById('service-select').focus();
                 return;
             }
             if(Object.keys(cart).length === 0) {
                 alert("ကျေးဇူးပြု၍ မီနူးပစ္စည်း အနည်းဆုံး တစ်ခု ရွေးချယ်ပါ");
+                switchView('menu');
                 return;
             }
 
@@ -347,8 +396,7 @@
 
             if (shopZone === customerZone || isAdj) {
                 if (service === 'express') deliveryFee = 3500;
-                else if (service === 'normal') deliveryFee = 2500;
-                else deliveryFee = 1500;
+                else deliveryFee = 2500;
             } else {
                 let key1 = `${shopZone}-${customerZone}`;
                 let key2 = `${customerZone}-${shopZone}`;
@@ -365,7 +413,8 @@
                 name: name,
                 phone: phone,
                 ward: ward,
-                service: service,
+                service: `${service === 'normal' ? 'ပုံမှန်ပို့ (' + scheduleText + ')' : 'အမြန်ပို့'}`,
+                location: location,
                 address: address,
                 items: Object.values(cart).map(i => `${i.ItemName} (${i.Price}x${i.qty})`),
                 total: totalAmount
