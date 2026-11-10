@@ -17,18 +17,18 @@
     </header>
 
     <div class="p-4 max-w-md mx-auto">
-        <!-- 1. Menu List Section -->
-        <h2 class="font-bold text-md mb-3">ရနိုင်သော မီနူးများ</h2>
-        <div id="product-list" class="grid grid-cols-2 gap-3 mb-6">
-            <!-- Products will load here dynamically -->
-        </div>
-
-        <!-- 2. Cart Items Summary Section -->
+        <!-- 1. Cart Items Summary Section (Moved to Top) -->
         <div class="bg-white p-4 rounded-lg shadow-sm border mb-4">
-            <h3 class="font-bold text-md mb-2 border-b pb-1">🛒 ရွေးချယ်ထားသော ခြင်းတောင်း</h3>
+            <h3 class="font-bold text-md mb-2 border-b pb-1">🛒 ရွေးချယ်ထားသော မီးနူးများ</h3>
             <div id="cart-items-list" class="space-y-2 mb-3 text-sm">
                 <p class="text-gray-400 text-center py-2">ခြင်းတောင်းထဲတွင် ပစ္စည်းမရှိသေးပါ။</p>
             </div>
+        </div>
+
+        <!-- 2. Menu List Section -->
+        <h2 class="font-bold text-md mb-3">ရနိုင်သော မီနူးများ</h2>
+        <div id="product-list" class="grid grid-cols-2 gap-3 mb-6">
+            <!-- Products will load here dynamically -->
         </div>
 
         <!-- 3. Address & Delivery Selection -->
@@ -64,7 +64,7 @@
         let products = [];
         let wards = [];
         let rates = [];
-        let cart = {}; // Object to store cart items with quantity { itemID: { ...product, qty } }
+        let cart = {};
 
         async function fetchData() {
             try {
@@ -105,7 +105,6 @@
                 wards.map(w => `<option value="${w.Ward_Name}">${w.Ward_Name} (${w.Zone_ID})</option>`).join('');
         }
 
-        // အရေအတွက် တိုးခြင်း/လျော့ခြင်း (+ / -)
         function updateQty(itemID, change) {
             const product = products.find(p => p.ItemID == itemID);
             if (!product) return;
@@ -121,7 +120,6 @@
                 }
             }
 
-            // Update UI
             const qtySpan = document.getElementById(`qty-${itemID}`);
             if (qtySpan) {
                 qtySpan.innerText = cart[itemID] ? cart[itemID].qty : 0;
@@ -130,7 +128,6 @@
             renderCartSummary();
         }
 
-        // ခြင်းတောင်းစာရင်းနှင့် စုစုပေါင်းငွေ ပြသခြင်း
         function renderCartSummary() {
             const cartList = document.getElementById('cart-items-list');
             const cartKeys = Object.keys(cart);
@@ -170,10 +167,4 @@
                 alert("ကျေးဇူးပြု၍ မီနူးပစ္စည်း အနည်းဆုံး တစ်ခု ရွေးချယ်ပါ");
                 return;
             }
-            alert("အော်ဒါအောင်မြင်စွာ တင်ပြီးပါပြီ!");
-        }
-
-        fetchData();
-    </script>
-</body>
-</html>
+            alert("အော်ဒါ
