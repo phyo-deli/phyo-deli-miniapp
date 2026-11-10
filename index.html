@@ -4,14 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Phyo Deli - Order App</title>
-    <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Telegram Web App SDK -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
 </head>
 <body class="bg-gray-100 text-gray-800 pb-28">
 
-    <!-- Header -->
     <header class="bg-red-600 text-white p-4 text-center font-bold text-lg shadow-md sticky top-0 z-50 flex justify-between items-center">
         <button id="back-btn" onclick="switchView('menu')" class="hidden text-sm bg-red-700 px-3 py-1 rounded-lg font-semibold hover:bg-red-800">
             ← မီနူးသို့
@@ -21,7 +18,7 @@
 
     <div class="p-4 max-w-md mx-auto space-y-4">
 
-        <!-- 🛒 ခြင်းတောင်းအကျဉ်းချုပ် (အမြဲတမ်း အပေါ်ဆုံးတွင် ထားရှိသည်) -->
+        <!-- 🛒 ခြင်းတောင်းအကျဉ်းချုပ် -->
         <div class="bg-white p-4 rounded-xl shadow-sm border">
             <h3 class="font-bold text-base mb-2 text-gray-700 border-b pb-2 flex justify-between items-center">
                 <span>🛒 ရွေးချယ်ထားသော မီနူးများ</span>
@@ -32,17 +29,15 @@
             </div>
         </div>
 
-        <!-- ================= VIEW 1: MENU VIEW (မီနူးရွေးရန် စာမျက်နှာ) ================= -->
+        <!-- VIEW 1: MENU -->
         <div id="view-menu" class="space-y-4">
             <div class="bg-white p-4 rounded-xl shadow-sm border">
                 <h2 class="font-bold text-base mb-3 text-red-600 border-b pb-2">🍜 ရနိုင်သော မီနူးများ</h2>
-                <div id="product-list" class="grid grid-cols-2 gap-3">
-                    <!-- Products will load here dynamically -->
-                </div>
+                <div id="product-list" class="grid grid-cols-2 gap-3"></div>
             </div>
         </div>
 
-        <!-- ================= VIEW 2: CHECKOUT VIEW (လိပ်စာနှင့် အော်ဒါအတည်ပြု စာမျက်နှာ) ================= -->
+        <!-- VIEW 2: CHECKOUT -->
         <div id="view-checkout" class="hidden space-y-4">
             <div class="bg-white p-4 rounded-xl shadow-sm border space-y-3">
                 <h3 class="font-bold text-base text-gray-700 border-b pb-2">📍 ပို့ဆောင်ရမည့် လိပ်စာနှင့် အချက်အလက်</h3>
@@ -73,7 +68,6 @@
                     </select>
                 </div>
 
-                <!-- ပုံမှန်ပို့ ရွေးချယ်မှ ပေါ်လာမည့် အချိန်ဇယား (Batch) -->
                 <div id="normal-schedule-container" class="hidden bg-blue-50 p-3 rounded-xl border border-blue-200 space-y-1">
                     <label class="block font-bold text-blue-900 text-xs sm:text-sm mb-1">⏰ ပုံမှန်ပို့ အချိန်ဇယား ရွေးချယ်ပါ -</label>
                     <select id="shoppingNormalScheduleSelect" class="w-full p-2.5 border rounded-xl bg-white font-bold text-gray-800 focus:ring-2 focus:ring-blue-400 outline-none text-xs sm:text-sm">
@@ -91,8 +85,7 @@
                             📍 လက်ရှိတည်နေရာ ရယူမည်
                         </button>
                     </div>
-                    <!-- Google Map Link ထည့်လိုက်တာနဲ့ Lat/Long အလိုအလျောက် ဖြတ်ထုတ်ပေးမည့် oninput event ထည့်ထားသည် -->
-                    <input type="text" id="cust-location" oninput="extractLatLong(this.value)" placeholder="Google Map Link ကူးထည့်ပါ (သို့) 16.2891, 97.6321..." class="w-full p-2.5 border rounded-lg text-sm bg-gray-50 focus:bg-white transition">
+                    <input type="text" id="cust-location" placeholder="Google Map Link (သို့) 16.2891, 97.6321..." class="w-full p-2.5 border rounded-lg text-sm bg-gray-50 focus:bg-white transition">
                 </div>
 
                 <div>
@@ -104,30 +97,29 @@
 
     </div>
 
-    <!-- Footer / Floating Navigation Bar -->
     <div class="fixed bottom-0 left-0 right-0 bg-white border-t p-4 shadow-2xl max-w-md mx-auto flex justify-between items-center z-50 rounded-t-2xl">
         <div>
             <p class="text-xs text-gray-500">စုစုပေါင်း ကျသင့်ငွေ</p>
             <p id="total-price" class="font-bold text-lg text-red-600">0 ကျပ်</p>
         </div>
         
-        <!-- View Menu တွင် ပေါ်မည့် ခလုတ် -->
         <button id="btn-to-checkout" onclick="switchView('checkout')" class="bg-red-600 text-white px-5 py-2.5 rounded-xl font-bold shadow-md hover:bg-red-700 text-sm transition">
             အော်ဒါကြည့်မည် 🛒
         </button>
 
-        <!-- View Checkout တွင် ပေါ်မည့် ခလုတ် -->
         <button id="btn-submit-order" onclick="submitOrder()" class="hidden bg-green-600 text-white px-6 py-2.5 rounded-xl font-bold shadow-md hover:bg-green-700 text-sm transition">
             အော်ဒါအတည်ပြုမည်
         </button>
     </div>
 
     <script>
-        const API_URL = "https://script.google.com/macros/s/AKfycbwJskAMJRaqbVmPT0K8MtbTh7j5NGYbUWO2Ov0eXvD3vVei36FcQoY877010syD9oHzNw/exec"; 
+        const API_URL = "https://script.google.com/macros/s/AKfycbwxY__r0pwVSIOOu-i7Gsm48BB3m7GvLw_UUKRCKEeh-i0GMdmG0xEp6104NPT8BuQCZQ/exec"; 
 
         let products = [];
         let wards = [];
         let cart = {};
+        let currentSubtotal = 0;
+        let currentDeliveryFee = 0;
 
         const shopWard = 'မြိုင်သာယာရပ်ကွက်';
         const shopZone = 'B';
@@ -164,18 +156,6 @@
             "F-G": { express: 6500, normal: 4000 }, "G-F": { express: 6500, normal: 4000 }
         };
 
-        // Google Map Link ထဲမှ Lat/Long ကို အလိုအလျောက် ဖြတ်ထုတ်ပေးမည့် Function
-        function extractLatLong(inputStr) {
-            // ပုံစံဥပမာ: @16.2891,97.6321 သို့မဟုတ် 16.2891, 97.6321
-            const coordRegex = /@?(-?\d+\.\d+),\s*(-?\d+\.\d+)/;
-            const match = inputStr.match(coordRegex);
-            if (match) {
-                // တွေ့ရှိပါက သပ်ရပ်သော Lat, Long ပုံစံသို့ ပြောင်းပေးနိုင်သည် (သို့မဟုတ် လင့်ခ်အတိုင်းလည်း ထားနိုင်သည်)
-                console.log("Extracted:", match[1], match[2]);
-            }
-        }
-
-        // ဖုန်း၏ GPS တည်နေရာကို တိုက်ရိုက်ရယူမည့် Function
         function getLocation() {
             if (navigator.geolocation) {
                 navigator.geolocation.getCurrentPosition(
@@ -186,7 +166,7 @@
                         alert("တည်နေရာကို အောင်မြင်စွာ ရယူပြီးပါပြီ!");
                     },
                     (error) => {
-                        alert("တည်နေရာ ရယူ၍ မရပါ။ ကျေးဇူးပြု၍ GPS ဖွင့်ထားခြင်း ရှိမရှိ စစ်ဆေးပါ။");
+                        alert("တည်နေရာ ရယူ၍ မရပါ။ GPS ဖွင့်ထားခြင်း ရှိမရှိ စစ်ဆေးပါ။");
                     }
                 );
             } else {
@@ -228,7 +208,7 @@
 
             if (targetView === 'checkout') {
                 if (Object.keys(cart).length === 0) {
-                    alert("ကျေးဇူးပြု၍ မီနူးပစ္စည်း အနည်းဆုံး တစ်ခု ရွေးချယ်ပါ");
+                    alert("ကျေးဇူးပြု၍ မီနူးပစ္စည်း အနည်းဆုံး တစ်ခု ရွေးချယ်ပါ။");
                     return;
                 }
                 menuView.classList.add('hidden');
@@ -326,12 +306,12 @@
 
             cartBadge.innerText = `${cartKeys.length} မျိုး`;
 
-            let subtotal = 0;
+            currentSubtotal = 0;
             if (cartKeys.length > 0) {
                 cartList.innerHTML = cartKeys.map(key => {
                     let item = cart[key];
                     let itemTotal = Number(item.Price) * item.qty;
-                    subtotal += itemTotal;
+                    currentSubtotal += itemTotal;
                     return `
                         <div class="flex justify-between items-center border-b pb-1.5 text-xs">
                             <div>
@@ -346,7 +326,7 @@
                 cartList.innerHTML = `<p class="text-gray-400 text-center py-2 text-xs">ခြင်းတောင်းထဲတွင် ပစ္စည်းမရှိသေးပါ။</p>`;
             }
 
-            let deliveryFee = 0;
+            currentDeliveryFee = 0;
             const wardSelect = document.getElementById('ward-select');
             const selectedOption = wardSelect.options[wardSelect.selectedIndex];
             const serviceType = document.getElementById('service-select').value;
@@ -357,30 +337,30 @@
                 const isAdj = checkAdjacent(shopWard, customerWard);
 
                 if (shopZone === customerZone || isAdj) {
-                    if (serviceType === 'express') deliveryFee = 3500;
-                    else deliveryFee = 2500;
+                    if (serviceType === 'express') currentDeliveryFee = 3500;
+                    else currentDeliveryFee = 2500;
                 } else {
                     let key1 = `${shopZone}-${customerZone}`;
                     let key2 = `${customerZone}-${shopZone}`;
                     let rateObj = deliveryRates[key1] || deliveryRates[key2];
                     if (rateObj) {
-                        deliveryFee = rateObj[serviceType] || 3000;
+                        currentDeliveryFee = rateObj[serviceType] || 3000;
                     } else {
-                        deliveryFee = 4000;
+                        currentDeliveryFee = 4000;
                     }
                 }
             }
 
-            if (subtotal > 0 && selectedOption.value && serviceType) {
+            if (currentSubtotal > 0 && selectedOption.value && serviceType) {
                 cartList.innerHTML += `
                     <div class="flex justify-between items-center pt-1 text-gray-500 text-xs font-semibold">
                         <span>🚚 ပို့ဆောင်ခ (${selectedOption.value})</span>
-                        <span class="font-bold text-gray-700">${deliveryFee.toLocaleString()} ကျပ်</span>
+                        <span class="font-bold text-gray-700">${currentDeliveryFee.toLocaleString()} ကျပ်</span>
                     </div>
                 `;
             }
 
-            let grandTotal = subtotal + (subtotal > 0 && selectedOption.value && serviceType ? deliveryFee : 0);
+            let grandTotal = currentSubtotal + (currentSubtotal > 0 && selectedOption.value && serviceType ? currentDeliveryFee : 0);
             document.getElementById('total-price').innerText = grandTotal.toLocaleString() + " ကျပ်";
         }
 
@@ -394,7 +374,6 @@
             const location = document.getElementById('cust-location').value.trim();
             const address = document.getElementById('cust-address').value.trim();
 
-            // မဖြည့်ရသေးပါက အော်ဒါတင်မရအောင် တင်းကြပ်စွာ စစ်ဆေးခြင်း
             if(!name) {
                 alert("ကျေးဇူးပြု၍ ဝယ်သူအမည် ဖြည့်စွက်ပါ။");
                 document.getElementById('cust-name').focus();
@@ -411,7 +390,7 @@
                 return;
             }
             if(!service) {
-                alert("ကျေးဇူးပြု၍ ပို့ဆောင်မည့် အမျိုးအစား (ပုံမှန်ပို့ သို့မဟုတ် အမြန်ပို့) ကို ရွေးချယ်ပါ။");
+                alert("ကျေးဇူးပြု၍ ပို့ဆောင်မည့် အမျိုးအစား ကို ရွေးချယ်ပါ။");
                 document.getElementById('service-select').focus();
                 return;
             }
@@ -421,27 +400,7 @@
                 return;
             }
 
-            let subtotal = Object.values(cart).reduce((sum, item) => sum + (Number(item.Price) * item.qty), 0);
-            let deliveryFee = 0;
-            const wardSelect = document.getElementById('ward-select');
-            const selectedOption = wardSelect.options[wardSelect.selectedIndex];
-            const customerZone = selectedOption.getAttribute('data-zone') || getZone(ward);
-            const isAdj = checkAdjacent(shopWard, ward);
-
-            if (shopZone === customerZone || isAdj) {
-                if (service === 'express') deliveryFee = 3500;
-                else deliveryFee = 2500;
-            } else {
-                let key1 = `${shopZone}-${customerZone}`;
-                let key2 = `${customerZone}-${shopZone}`;
-                let rateObj = deliveryRates[key1] || deliveryRates[key2];
-                if (rateObj) {
-                    deliveryFee = rateObj[service] || 3000;
-                } else {
-                    deliveryFee = 4000;
-                }
-            }
-            let totalAmount = subtotal + deliveryFee;
+            let totalAmount = currentSubtotal + currentDeliveryFee;
 
             let orderData = {
                 name: name,
@@ -451,6 +410,8 @@
                 location: location,
                 address: address,
                 items: Object.values(cart).map(i => `${i.ItemName} (${i.Price}x${i.qty})`),
+                subtotal: currentSubtotal,
+                deliveryFee: currentDeliveryFee,
                 total: totalAmount
             };
 
