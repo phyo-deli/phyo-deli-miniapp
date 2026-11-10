@@ -9,76 +9,94 @@
     <!-- Telegram Web App SDK -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
 </head>
-<body class="bg-gray-100 text-gray-800 pb-36">
+<body class="bg-gray-100 text-gray-800 pb-28">
 
     <!-- Header -->
-    <header class="bg-red-600 text-white p-4 text-center font-bold text-lg shadow-md sticky top-0 z-50">
-        🍔 Phyo Deli Order App
+    <header class="bg-red-600 text-white p-4 text-center font-bold text-lg shadow-md sticky top-0 z-50 flex justify-between items-center">
+        <button id="back-btn" onclick="switchView('menu')" class="hidden text-sm bg-red-700 px-3 py-1 rounded-lg font-semibold hover:bg-red-800">
+            ← မီနူးသို့
+        </button>
+        <span class="w-full text-center">🍔 Phyo Deli Order App</span>
     </header>
 
     <div class="p-4 max-w-md mx-auto space-y-4">
-        
-        <!-- 1. Menu List Section -->
-        <div class="bg-white p-4 rounded-xl shadow-sm border">
-            <h2 class="font-bold text-base mb-3 text-red-600 border-b pb-2">🍜 ရနိုင်သော မီနူးများ</h2>
-            <div id="product-list" class="grid grid-cols-2 gap-3">
-                <!-- Products will load here dynamically -->
-            </div>
-        </div>
 
-        <!-- 2. Cart Items Summary Section -->
+        <!-- 🛒 ခြင်းတောင်းအကျဉ်းချုပ် (အမြဲတမ်း အပေါ်ဆုံးတွင် ထားရှိထားသည်) -->
         <div class="bg-white p-4 rounded-xl shadow-sm border">
-            <h3 class="font-bold text-base mb-2 text-gray-700 border-b pb-2">🛒 ရွေးချယ်ထားသော ခြင်းတောင်း</h3>
+            <h3 class="font-bold text-base mb-2 text-gray-700 border-b pb-2 flex justify-between items-center">
+                <span>🛒 ရွေးချယ်ထားသော ခြင်းတောင်း</span>
+                <span id="cart-count-badge" class="bg-red-100 text-red-600 text-xs px-2 py-0.5 rounded-full font-bold">0 မျိုး</span>
+            </h3>
             <div id="cart-items-list" class="space-y-2 text-sm">
-                <p class="text-gray-400 text-center py-2">ခြင်းတောင်းထဲတွင် ပစ္စည်းမရှိသေးပါ။</p>
+                <p class="text-gray-400 text-center py-2 text-xs">ခြင်းတောင်းထဲတွင် ပစ္စည်းမရှိသေးပါ။</p>
             </div>
         </div>
 
-        <!-- 3. Customer Info & Delivery Selection -->
-        <div class="bg-white p-4 rounded-xl shadow-sm border space-y-3">
-            <h3 class="font-bold text-base text-gray-700 border-b pb-2">📍 ပို့ဆောင်ရမည့် လိပ်စာနှင့် အချက်အလက်</h3>
-            
-            <div>
-                <label class="block text-xs font-semibold text-gray-600 mb-1">ဝယ်သူအမည်</label>
-                <input type="text" id="cust-name" placeholder="အမည်ထည့်ပါ..." class="w-full p-2.5 border rounded-lg text-sm bg-gray-50 focus:bg-white transition">
-            </div>
-
-            <div>
-                <label class="block text-xs font-semibold text-gray-600 mb-1">ဖုန်းနံပါတ်</label>
-                <input type="tel" id="cust-phone" placeholder="09xxxxxxxxx" class="w-full p-2.5 border rounded-lg text-sm bg-gray-50 focus:bg-white transition">
-            </div>
-
-            <div>
-                <label class="block text-xs font-semibold text-gray-600 mb-1">သင့်ရပ်ကွက်ကို ရွေးပါ</label>
-                <select id="ward-select" onchange="calculateTotal()" class="w-full p-2.5 border rounded-lg text-sm bg-gray-50 focus:bg-white transition">
-                    <option value="">ရပ်ကွက် ရွေးပါ...</option>
-                </select>
-            </div>
-
-            <div>
-                <label class="block text-xs font-semibold text-gray-600 mb-1">ပို့ဆောင်မည့် အမျိုးအစား</label>
-                <select id="service-select" onchange="calculateTotal()" class="w-full p-2.5 border rounded-lg text-sm bg-gray-50 focus:bg-white transition">
-                    <option value="normal">ပုံမှန်ပို့</option>
-                    <option value="express">အမြန်ပို့</option>
-                    <option value="slow">အနှေးပို့</option>
-                </select>
-            </div>
-
-            <div>
-                <label class="block text-xs font-semibold text-gray-600 mb-1">အသေးစိတ် လိပ်စာ / မှတ်ချက်</label>
-                <textarea id="cust-address" placeholder="အိမ်နံပါတ်၊ လမ်းနာမည်..." class="w-full p-2.5 border rounded-lg text-sm bg-gray-50 focus:bg-white transition" rows="2"></textarea>
+        <!-- ================= VIEW 1: MENU VIEW (မီနူးရွေးရန် စာမျက်နှာ) ================= -->
+        <div id="view-menu" class="space-y-4">
+            <div class="bg-white p-4 rounded-xl shadow-sm border">
+                <h2 class="font-bold text-base mb-3 text-red-600 border-b pb-2">🍜 ရနိုင်သော မီနူးများ</h2>
+                <div id="product-list" class="grid grid-cols-2 gap-3">
+                    <!-- Products will load here dynamically -->
+                </div>
             </div>
         </div>
+
+        <!-- ================= VIEW 2: CHECKOUT VIEW (လိပ်စာနှင့် အော်ဒါအတည်ပြု စာမျက်နှာ) ================= -->
+        <div id="view-checkout" class="hidden space-y-4">
+            <div class="bg-white p-4 rounded-xl shadow-sm border space-y-3">
+                <h3 class="font-bold text-base text-gray-700 border-b pb-2">📍 ပို့ဆောင်ရမည့် လိပ်စာနှင့် အချက်အလက်</h3>
+                
+                <div>
+                    <label class="block text-xs font-semibold text-gray-600 mb-1">ဝယ်သူအမည် <span class="text-red-500">*</span></label>
+                    <input type="text" id="cust-name" placeholder="အမည်ထည့်ပါ..." class="w-full p-2.5 border rounded-lg text-sm bg-gray-50 focus:bg-white transition">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-gray-600 mb-1">ဖုန်းနံပါတ် <span class="text-red-500">*</span></label>
+                    <input type="tel" id="cust-phone" placeholder="09xxxxxxxxx" class="w-full p-2.5 border rounded-lg text-sm bg-gray-50 focus:bg-white transition">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-gray-600 mb-1">သင့်ရပ်ကွက်ကို ရွေးပါ <span class="text-red-500">*</span></label>
+                    <select id="ward-select" onchange="calculateTotal()" class="w-full p-2.5 border rounded-lg text-sm bg-gray-50 focus:bg-white transition">
+                        <option value="">ရပ်ကွက် ရွေးပါ...</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-gray-600 mb-1">ပို့ဆောင်မည့် အမျိုးအစား</label>
+                    <select id="service-select" onchange="calculateTotal()" class="w-full p-2.5 border rounded-lg text-sm bg-gray-50 focus:bg-white transition">
+                        <option value="normal">ပုံမှန်ပို့</option>
+                        <option value="express">အမြန်ပို့</option>
+                        <option value="slow">အနှေးပို့</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-gray-600 mb-1">အသေးစိတ် လိပ်စာ / မှတ်ချက်</label>
+                    <textarea id="cust-address" placeholder="အိမ်နံပါတ်၊ လမ်းနာမည်..." class="w-full p-2.5 border rounded-lg text-sm bg-gray-50 focus:bg-white transition" rows="2"></textarea>
+                </div>
+            </div>
+        </div>
+
     </div>
 
-    <!-- Footer / Cart Summary -->
+    <!-- Footer / Floating Navigation Bar -->
     <div class="fixed bottom-0 left-0 right-0 bg-white border-t p-4 shadow-2xl max-w-md mx-auto flex justify-between items-center z-50 rounded-t-2xl">
         <div>
-            <p class="text-xs text-gray-500">ပစ္စည်းဖိုး + ပို့ဆောင်ခ</p>
+            <p class="text-xs text-gray-500">စုစုပေါင်း ကျသင့်ငွေ</p>
             <p id="total-price" class="font-bold text-lg text-red-600">0 ကျပ်</p>
         </div>
-        <button onclick="submitOrder()" class="bg-green-600 text-white px-6 py-2.5 rounded-xl font-bold shadow-md hover:bg-green-700 text-sm transition">
-            အော်ဒါတင်မည်
+        
+        <!-- View Menu တွင် ပေါ်မည့် ခလုတ် -->
+        <button id="btn-to-checkout" onclick="switchView('checkout')" class="bg-red-600 text-white px-5 py-2.5 rounded-xl font-bold shadow-md hover:bg-red-700 text-sm transition">
+            အော်ဒါကြည့်မည် 🛒
+        </button>
+
+        <!-- View Checkout တွင် ပေါ်မည့် ခလုတ် -->
+        <button id="btn-submit-order" onclick="submitOrder()" class="hidden bg-green-600 text-white px-6 py-2.5 rounded-xl font-bold shadow-md hover:bg-green-700 text-sm transition">
+            အော်ဒါအတည်ပြုမည်
         </button>
     </div>
 
@@ -135,6 +153,34 @@
                 ['စမ်းကြီးရပ်ကွက်', 'စမ်းကြီးရပ်ကွက်']
             ];
             return pairs.some(pair => (pair[0] === pWard && pair[1] === dWard) || (pair[0] === dWard && pair[1] === pWard));
+        }
+
+        // View နှစ်ခု အကူးအပြောင်း ပြုလုပ်ပေးမည့် Function
+        function switchView(targetView) {
+            const menuView = document.getElementById('view-menu');
+            const checkoutView = document.getElementById('view-checkout');
+            const btnToCheckout = document.getElementById('btn-to-checkout');
+            const btnSubmitOrder = document.getElementById('btn-submit-order');
+            const backBtn = document.getElementById('back-btn');
+
+            if (targetView === 'checkout') {
+                if (Object.keys(cart).length === 0) {
+                    alert("ကျေးဇူးပြု၍ မီနူးပစ္စည်း အနည်းဆုံး တစ်ခု ရွေးချယ်ပါ");
+                    return;
+                }
+                menuView.classList.add('hidden');
+                checkoutView.classList.remove('hidden');
+                btnToCheckout.classList.add('hidden');
+                btnSubmitOrder.classList.remove('hidden');
+                backBtn.classList.remove('hidden');
+                window.scrollTo(0, 0);
+            } else {
+                checkoutView.classList.add('hidden');
+                menuView.classList.remove('hidden');
+                btnSubmitOrder.classList.add('hidden');
+                btnToCheckout.classList.remove('hidden');
+                backBtn.classList.add('hidden');
+            }
         }
 
         async function fetchData() {
@@ -212,7 +258,10 @@
 
         function calculateTotal() {
             const cartList = document.getElementById('cart-items-list');
+            const cartBadge = document.getElementById('cart-count-badge');
             const cartKeys = Object.keys(cart);
+
+            cartBadge.innerText = `${cartKeys.length} မျိုး`;
 
             let subtotal = 0;
             if (cartKeys.length > 0) {
@@ -223,7 +272,7 @@
                     return `
                         <div class="flex justify-between items-center border-b pb-1.5 text-xs">
                             <div>
-                                <span class="font-medium">${item.ItemName}</span>
+                                <span class="font-medium text-gray-800">${item.ItemName}</span>
                                 <span class="text-gray-400 ml-1">(${item.Price} x ${item.qty})</span>
                             </div>
                             <span class="font-bold text-red-600">${itemTotal.toLocaleString()} ကျပ်</span>
@@ -262,9 +311,9 @@
 
             if (subtotal > 0 && selectedOption.value) {
                 cartList.innerHTML += `
-                    <div class="flex justify-between items-center pt-1 text-gray-500 text-xs">
-                        <span>ပို့ဆောင်ခ (${selectedOption.value})</span>
-                        <span class="font-bold">${deliveryFee.toLocaleString()} ကျပ်</span>
+                    <div class="flex justify-between items-center pt-1 text-gray-500 text-xs font-semibold">
+                        <span>🚚 ပို့ဆောင်ခ (${selectedOption.value})</span>
+                        <span class="font-bold text-gray-700">${deliveryFee.toLocaleString()} ကျပ်</span>
                     </div>
                 `;
             }
