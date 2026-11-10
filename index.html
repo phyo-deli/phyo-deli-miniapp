@@ -55,9 +55,9 @@
             <div>
                 <label class="block text-sm font-semibold mb-1">ပို့ဆောင်မည့် အမျိုးအစား</label>
                 <select id="service-select" onchange="calculateTotal()" class="w-full p-2 border rounded-md text-sm">
-                    <option value="normal">ရပ်ကွက်ထဲပဲပို့ (ပုံမှန်ပို့)</option>
-                    <option value="express">အမြန်ပို့ (Express)</option>
-                    <option value="cross">တစ်ဇုန်ကျော် အမြန်ပို့</option>
+                    <option value="normal">ပုံမှန်ပို့</option>
+                    <option value="express">အမြန်ပို့</option>
+                    <option value="slow">အနှေးပို့</option>
                 </select>
             </div>
 
@@ -87,6 +87,42 @@
         let rates = [];
         let cart = {};
 
+        // ဆိုင်တည်ရှိရာ ရပ်ကွက်နှင့် ဇုန် (မြိုင်သာယာရပ်ကွက် - Zone B)
+        const shopWard = 'မြိုင်သာယာရပ်ကွက်';
+        const shopZone = 'B';
+
+        const wardZones = {
+            'A': ['မန္တလေးရပ်ကွက်','ဖက်တန်းရပ်ကွက်','ရွှေတောင်ရပ်ကွက်','စစ်ကဲကုန်းရပ်ကွက်','မရမ်းကုန်းရပ်ကွက်','ပန်းပဲတန်းရပ်ကွက်','ဘိုကုန်းရပ်ကွက်','မောင်ငံရပ်ကွက်'],
+            'B': ['ကွင်းကျောင်းရပ်ကွက်','သီရီမြိုင်ရပ်ကွက်','သီရီမင်္ဂလာရပ်ကွက်','ဈေးကြိုရပ်ကွက်','မြိုင်သာယာရပ်ကွက်','ကျွဲခြံကုန်းရပ်ကွက်','ငန်းတေးရပ်ကွက်','ဇေယျာမြိုင်ရပ်ကွက်'],
+            'C': ['အောက်ကျင်းရပ်ကွက်','ရွှေမြိုင်သီရီရပ်ကွက်','ဇေယျာချမ်းမြေ့ရပ်ကွက်','သာယာအေးရပ်ကွက်','လှိုင်ရပ်ကွက်','ရွှေပြည်အေးရပ်ကွက်','မြေနီကုန်းရပ်ကွက်'],
+            'D': ['မုပွန်ရပ်ကွက်','ကျောက်တန်းရပ်ကွက်','ဂွေးကုန်းရပ်ကွက်','စမ်းကြီးရပ်ကွက်','နောင်ခရီရပ်ကွက်'],
+            'E': ['ကြာအင်းရပ်ကွက်','ဖားအောက်ရပ်ကွက်','ကော့ခမယ်ရပ်ကွက်','ရိုးဂိုးရပ်ကွက်'],
+            'F': ['ခြောက်မိုင်ရပ်ကွက်','မင်းရွာရပ်ကွက်','မုရောင်းရပ်ကွက်','သွေးသောက်ရပ်ကွက်'],
+            'G': ['စက်မှုဇုန်ရပ်ကွက်','ညောင်ပင်ဆိပ်ရပ်ကွက်']
+        };
+
+        const deliveryRates = {
+            "A-B": { express: 4500, normal: 3000, slow: 2000 }, "B-A": { express: 4500, normal: 3000, slow: 2000 },
+            "A-C": { express: 4500, normal: 3000, slow: 2000 }, "C-A": { express: 4500, normal: 3000, slow: 2000 },
+            "A-D": { express: 5500, normal: 3500, slow: 2500 }, "D-A": { express: 5500, normal: 3500, slow: 2500 },
+            "A-E": { express: 9000, normal: 4500, slow: 3500 }, "E-A": { express: 9000, normal: 4500, slow: 3500 },
+            "A-F": { express: 9000, normal: 4500, slow: 3500 }, "F-A": { express: 9000, normal: 4500, slow: 3500 },
+            "A-G": { express: 9000, normal: 4500, slow: 3500 }, "G-A": { express: 9000, normal: 4500, slow: 3500 },
+            "B-E": { express: 6500, normal: 4000, slow: 3000 }, "E-B": { express: 6500, normal: 4000, slow: 3000 },
+            "B-F": { express: 6500, normal: 4000, slow: 3000 }, "F-B": { express: 6500, normal: 4000, slow: 3000 },
+            "B-G": { express: 6500, normal: 4000, slow: 3000 }, "G-B": { express: 6500, normal: 4000, slow: 3000 },
+            "C-D": { express: 6500, normal: 4000, slow: 3000 }, "D-C": { express: 6500, normal: 4000, slow: 3000 },
+            "C-E": { express: 9000, normal: 4500, slow: 3500 }, "E-C": { express: 9000, normal: 4500, slow: 3500 },
+            "C-F": { express: 9000, normal: 4500, slow: 3500 }, "F-C": { express: 9000, normal: 4500, slow: 3500 },
+            "C-G": { express: 9000, normal: 4500, slow: 3500 }, "G-C": { express: 9000, normal: 4500, slow: 3500 },
+            "D-E": { express: 5500, normal: 3500, slow: 2500 }, "E-D": { express: 5500, normal: 3500, slow: 2500 },
+            "D-F": { express: 9000, normal: 4500, slow: 3500 }, "F-D": { express: 9000, normal: 4500, slow: 3500 },
+            "D-G": { express: 9000, normal: 4500, slow: 3500 }, "G-D": { express: 9000, normal: 4500, slow: 3500 },
+            "E-F": { express: 9000, normal: 4500, slow: 3500 }, "F-E": { express: 9000, normal: 4500, slow: 3500 },
+            "E-G": { express: 9000, normal: 4500, slow: 3500 }, "G-E": { express: 9000, normal: 4500, slow: 3500 },
+            "F-G": { express: 6500, normal: 4000, slow: 3000 }, "G-F": { express: 6500, normal: 4000, slow: 3000 }
+        };
+
         async function fetchData() {
             try {
                 let resProd = await fetch(API_URL);
@@ -97,7 +133,6 @@
                 let resZones = await fetch(API_URL + "?action=zones");
                 let dataZones = await resZones.json();
                 wards = dataZones.wards || [];
-                rates = dataZones.rates || [];
                 renderWards();
             } catch (err) {
                 console.error("Error loading data:", err);
@@ -126,8 +161,13 @@
 
         function renderWards() {
             const select = document.getElementById('ward-select');
-            select.innerHTML = '<option value="">ရပ်ကွက် ရွေးပါ...</option>' + 
-                wards.map(w => `<option value="${w.Ward_Name}" data-zone="${w.Zone_ID}">${w.Ward_Name} (${w.Zone_ID})</option>`).join('');
+            let html = '<option value="">ရပ်ကွက် ရွေးပါ...</option>';
+            for (let z in wardZones) {
+                wardZones[z].forEach(w => {
+                    html += `<option value="${w}" data-zone="${z}">${w} (Zone ${z})</option>`;
+                });
+            }
+            select.innerHTML = html;
         }
 
         function updateQty(itemID, change) {
@@ -151,6 +191,13 @@
             }
 
             calculateTotal();
+        }
+
+        function getZone(wardName) {
+            for (let z in wardZones) {
+                if (wardZones[z].includes(wardName)) return z;
+            }
+            return 'B';
         }
 
         function calculateTotal() {
@@ -177,30 +224,36 @@
                 cartList.innerHTML = `<p class="text-gray-400 text-center py-2">ခြင်းတောင်းထဲတွင် ပစ္စည်းမရှိသေးပါ။</p>`;
             }
 
-            // ဒလီခ (Delivery Fee) တွက်ချက်ခြင်း
             let deliveryFee = 0;
             const wardSelect = document.getElementById('ward-select');
             const selectedOption = wardSelect.options[wardSelect.selectedIndex];
-            const serviceType = document.getElementById('service-select').value;
+            const serviceType = document.getElementById('service-select').value; // express, normal, slow
 
             if (selectedOption && selectedOption.value) {
-                let zoneID = selectedOption.getAttribute('data-zone');
-                // rates ထဲမှ သက်ဆိုင်ရာ Zone နှင့် Service အလိုက် နှုန်းထားရှာရန်
-                let rateObj = rates.find(r => r.Zone_ID === zoneID);
-                if (rateObj) {
-                    if (serviceType === 'express') {
-                        deliveryFee = Number(rateObj.Express_Fee || rateObj.Fee || 0);
-                    } else if (serviceType === 'cross') {
-                        deliveryFee = Number(rateObj.Cross_Zone_Fee || rateObj.Fee || 0);
+                const customerWard = selectedOption.value;
+                const customerZone = selectedOption.getAttribute('data-zone') || getZone(customerWard);
+
+                if (shopZone === customerZone) {
+                    // Zone တူပါက (မြိုင်သာယာရပ်ကွက်ရှိ Zone B အတွင်း)
+                    if (serviceType === 'express') deliveryFee = 3500;
+                    else if (serviceType === 'normal') deliveryFee = 2500;
+                    else deliveryFee = 1500;
+                } else {
+                    // Zone ကူးပါက ဇယားအတိုင်း ယူမည်
+                    let key1 = `${shopZone}-${customerZone}`;
+                    let key2 = `${customerZone}-${shopZone}`;
+                    let rateObj = deliveryRates[key1] || deliveryRates[key2];
+                    if (rateObj) {
+                        deliveryFee = rateObj[serviceType] || 3000;
                     } else {
-                        deliveryFee = Number(rateObj.Normal_Fee || rateObj.Fee || 0);
+                        deliveryFee = 4000; // Default fallback fee
                     }
                 }
             }
 
             if (subtotal > 0 && selectedOption.value) {
                 cartList.innerHTML += `
-                    <div class="flex justify-between items-center pt-1 text-gray-600">
+                    <div class="flex justify-between items-center pt-1 text-gray-600 text-xs">
                         <span>ပို့ဆောင်ခ (${selectedOption.value})</span>
                         <span class="font-bold">${deliveryFee.toLocaleString()} ကျပ်</span>
                     </div>
@@ -218,7 +271,7 @@
             const address = document.getElementById('cust-address').value.trim();
 
             if(!name || !phone || !ward) {
-                alert("ကျေးဇူးပြု၍ အမည်၊ ဖုန်းနံပါတ်နှင့် ရပ်ကွက်ကို ဖြည့်စွက်ပါ");
+                alert("ကျေးဇူးပြု၍ ဝယ်သူအမည်၊ ဖုန်းနံပါတ်နှင့် ရပ်ကွက်ကို ဖြည့်စွက်ပါ");
                 return;
             }
             if(Object.keys(cart).length === 0) {
