@@ -85,8 +85,14 @@
                 </div>
 
                 <div>
-                    <label class="block text-xs font-semibold text-gray-600 mb-1">တည်နေရာ (Lat/Long သို့မဟုတ် Google Map Link)</label>
-                    <input type="text" id="cust-location" placeholder="ဥပမာ: 16.2891, 97.6321 သို့မဟုတ် Map Link..." class="w-full p-2.5 border rounded-lg text-sm bg-gray-50 focus:bg-white transition">
+                    <div class="flex justify-between items-center mb-1">
+                        <label class="block text-xs font-semibold text-gray-600">တည်နေရာ (Lat, Long သို့မဟုတ် Google Map Link)</label>
+                        <button type="button" onclick="getLocation()" class="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded font-bold hover:bg-blue-200">
+                            📍 လက်ရှိတည်နေရာ ရယူမည်
+                        </button>
+                    </div>
+                    <!-- Google Map Link ထည့်လိုက်တာနဲ့ Lat/Long အလိုအလျောက် ဖြတ်ထုတ်ပေးမည့် oninput event ထည့်ထားသည် -->
+                    <input type="text" id="cust-location" oninput="extractLatLong(this.value)" placeholder="Google Map Link ကူးထည့်ပါ (သို့) 16.2891, 97.6321..." class="w-full p-2.5 border rounded-lg text-sm bg-gray-50 focus:bg-white transition">
                 </div>
 
                 <div>
@@ -158,6 +164,36 @@
             "F-G": { express: 6500, normal: 4000 }, "G-F": { express: 6500, normal: 4000 }
         };
 
+        // Google Map Link ထဲမှ Lat/Long ကို အလိုအလျောက် ဖြတ်ထုတ်ပေးမည့် Function
+        function extractLatLong(inputStr) {
+            // ပုံစံဥပမာ: @16.2891,97.6321 သို့မဟုတ် 16.2891, 97.6321
+            const coordRegex = /@?(-?\d+\.\d+),\s*(-?\d+\.\d+)/;
+            const match = inputStr.match(coordRegex);
+            if (match) {
+                // တွေ့ရှိပါက သပ်ရပ်သော Lat, Long ပုံစံသို့ ပြောင်းပေးနိုင်သည် (သို့မဟုတ် လင့်ခ်အတိုင်းလည်း ထားနိုင်သည်)
+                console.log("Extracted:", match[1], match[2]);
+            }
+        }
+
+        // ဖုန်း၏ GPS တည်နေရာကို တိုက်ရိုက်ရယူမည့် Function
+        function getLocation() {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    (position) => {
+                        const lat = position.coords.latitude.toFixed(6);
+                        const lng = position.coords.longitude.toFixed(6);
+                        document.getElementById('cust-location').value = `${lat}, ${lng}`;
+                        alert("တည်နေရာကို အောင်မြင်စွာ ရယူပြီးပါပြီ!");
+                    },
+                    (error) => {
+                        alert("တည်နေရာ ရယူ၍ မရပါ။ ကျေးဇူးပြု၍ GPS ဖွင့်ထားခြင်း ရှိမရှိ စစ်ဆေးပါ။");
+                    }
+                );
+            } else {
+                alert("သင့်ဖုန်းတွင် Location ရယူခြင်းကို မထောက်ပံ့ပါ။");
+            }
+        }
+
         function checkAdjacent(pWard, dWard) {
             const pairs = [
                 ['မောင်ငံရပ်ကွက်', 'ကွင်းကျောင်းရပ်ကွက်'],
@@ -171,7 +207,6 @@
             return pairs.some(pair => (pair[0] === pWard && pair[1] === dWard) || (pair[0] === dWard && pair[1] === pWard));
         }
 
-        // ပုံမှန်ပို့ ရွေးချယ်မှ အချိန်ဇယားဘောက်စ် ပေါ်လာစေရန်
         function toggleServiceOptions() {
             const serviceType = document.getElementById('service-select').value;
             const scheduleContainer = document.getElementById('normal-schedule-container');
@@ -184,7 +219,6 @@
             calculateTotal();
         }
 
-        // View နှစ်ခု အကူးအပြောင်း ပြုလုပ်ပေးမည့် Function
         function switchView(targetView) {
             const menuView = document.getElementById('view-menu');
             const checkoutView = document.getElementById('view-checkout');
@@ -324,7 +358,7 @@
 
                 if (shopZone === customerZone || isAdj) {
                     if (serviceType === 'express') deliveryFee = 3500;
-                    else deliveryFee = 2500; // normal
+                    else deliveryFee = 2500;
                 } else {
                     let key1 = `${shopZone}-${customerZone}`;
                     let key2 = `${customerZone}-${shopZone}`;
@@ -360,19 +394,19 @@
             const location = document.getElementById('cust-location').value.trim();
             const address = document.getElementById('cust-address').value.trim();
 
-            // မဖြစ်မနေ ဖြည့်ရမည့် အချက်အလက်များ စစ်ဆေးခြင်း
+            // မဖြည့်ရသေးပါက အော်ဒါတင်မရအောင် တင်းကြပ်စွာ စစ်ဆေးခြင်း
             if(!name) {
-                alert("ကျေးဇူးပြု၍ ဝယ်သူအမည် ဖြည့်စွက်ပါ");
+                alert("ကျေးဇူးပြု၍ ဝယ်သူအမည် ဖြည့်စွက်ပါ။");
                 document.getElementById('cust-name').focus();
                 return;
             }
             if(!phone) {
-                alert("ကျေးဇူးပြု၍ ဖုန်းနံပါတ် ဖြည့်စွက်ပါ");
+                alert("ကျေးဇူးပြု၍ ဖုန်းနံပါတ် ဖြည့်စွက်ပါ။");
                 document.getElementById('cust-phone').focus();
                 return;
             }
             if(!ward) {
-                alert("ကျေးဇူးပြု၍ သင့်ရပ်ကွက်ကို ရွေးချယ်ပါ");
+                alert("ကျေးဇူးပြု၍ သင့်ရပ်ကွက်ကို ရွေးချယ်ပါ။");
                 document.getElementById('ward-select').focus();
                 return;
             }
@@ -382,7 +416,7 @@
                 return;
             }
             if(Object.keys(cart).length === 0) {
-                alert("ကျေးဇူးပြု၍ မီနူးပစ္စည်း အနည်းဆုံး တစ်ခု ရွေးချယ်ပါ");
+                alert("ကျေးဇူးပြု၍ မီနူးပစ္စည်း အနည်းဆုံး တစ်ခု ရွေးချယ်ပါ။");
                 switchView('menu');
                 return;
             }
