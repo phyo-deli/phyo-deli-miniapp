@@ -57,6 +57,7 @@
         let products = [];
         let wards = [];
         let rates = [];
+        let cart = []; // ခြင်းတောင်းထဲရှိ ပစ္စည်းများ သိမ်းဆည်းရန်
 
         // Data တွေ လှမ်းဆွဲခြင်း
         async function fetchData() {
@@ -96,14 +97,30 @@
                 wards.map(w => `<option value="${w.Ward_Name}">${w.Ward_Name} (${w.Zone_ID})</option>`).join('');
         }
 
-        function addToCart(id) {
-            alert("ပစ္စည်းထည့်ပြီးပါပြီ");
+        // ပစ္စည်းကို Cart ထဲ ထည့်သွင်းခြင်း
+        function addToCart(itemID) {
+            const product = products.find(p => p.ItemID == itemID);
+            if (product) {
+                cart.push(product);
+                updateCartTotal();
+                alert(product.ItemName + " ကို ခြင်းတောင်းထဲ ထည့်ပြီးပါပြီ။");
+            }
+        }
+
+        // စုစုပေါင်းငွေ တွက်ချက်ပြသခြင်း
+        function updateCartTotal() {
+            let total = cart.reduce((sum, item) => sum + Number(item.Price), 0);
+            document.getElementById('total-price').innerText = total.toLocaleString() + " ကျပ်";
         }
 
         function submitOrder() {
             const selectedWard = document.getElementById('ward-select').value;
             if(!selectedWard) {
                 alert("ကျေးဇူးပြု၍ ရပ်ကွက်ရွေးချယ်ပါ");
+                return;
+            }
+            if(cart.length === 0) {
+                alert("ကျေးဇူးပြု၍ မီနူးပစ္စည်း အနည်းဆုံး တစ်ခု ရွေးချယ်ပါ");
                 return;
             }
             alert("အော်ဒါအောင်မြင်စွာ တင်ပြီးပါပြီ!");
