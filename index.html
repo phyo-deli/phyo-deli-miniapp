@@ -84,10 +84,8 @@
 
         let products = [];
         let wards = [];
-        let rates = [];
         let cart = {};
 
-        // ဆိုင်တည်ရှိရာ ရပ်ကွက်နှင့် ဇုန် (မြိုင်သာယာရပ်ကွက် - Zone B)
         const shopWard = 'မြိုင်သာယာရပ်ကွက်';
         const shopZone = 'B';
 
@@ -123,16 +121,25 @@
             "F-G": { express: 6500, normal: 4000, slow: 3000 }, "G-F": { express: 6500, normal: 4000, slow: 3000 }
         };
 
+        function checkAdjacent(pWard, dWard) {
+            const pairs = [
+                ['မောင်ငံရပ်ကွက်', 'ကွင်းကျောင်းရပ်ကွက်'],
+                ['မန္တလေးရပ်ကွက်', 'အောက်ကျင်းရပ်ကွက်'],
+                ['မြေနီကုန်းရပ်ကွက်', 'ဇေယျာမြိုင်ရပ်ကွက်'],
+                ['သီရီမြိုင်ရပ်ကွက်', 'မုပွန်ရပ်ကွက်'],
+                ['သီရီမင်္ဂလာရပ်ကွက်', 'မုပွန်ရပ်ကွက်'],
+                ['ဈေးကြိုရပ်ကွက်', 'မုပွန်ရပ်ကွက်'],
+                ['စမ်းကြီးရပ်ကွက်', 'စမ်းကြီးရပ်ကွက်']
+            ];
+            return pairs.some(pair => (pair[0] === pWard && pair[1] === dWard) || (pair[0] === dWard && pair[1] === pWard));
+        }
+
         async function fetchData() {
             try {
                 let resProd = await fetch(API_URL);
                 let dataProd = await resProd.json();
                 products = dataProd.products || [];
                 renderProducts();
-
-                let resZones = await fetch(API_URL + "?action=zones");
-                let dataZones = await resZones.json();
-                wards = dataZones.wards || [];
                 renderWards();
             } catch (err) {
                 console.error("Error loading data:", err);
@@ -227,26 +234,25 @@
             let deliveryFee = 0;
             const wardSelect = document.getElementById('ward-select');
             const selectedOption = wardSelect.options[wardSelect.selectedIndex];
-            const serviceType = document.getElementById('service-select').value; // express, normal, slow
+            const serviceType = document.getElementById('service-select').value;
 
             if (selectedOption && selectedOption.value) {
                 const customerWard = selectedOption.value;
                 const customerZone = selectedOption.getAttribute('data-zone') || getZone(customerWard);
+                const isAdj = checkAdjacent(shopWard, customerWard);
 
-                if (shopZone === customerZone) {
-                    // Zone တူပါက (မြိုင်သာယာရပ်ကွက်ရှိ Zone B အတွင်း)
+                if (shopZone === customerZone || isAdj) {
                     if (serviceType === 'express') deliveryFee = 3500;
                     else if (serviceType === 'normal') deliveryFee = 2500;
                     else deliveryFee = 1500;
                 } else {
-                    // Zone ကူးပါက ဇယားအတိုင်း ယူမည်
                     let key1 = `${shopZone}-${customerZone}`;
                     let key2 = `${customerZone}-${shopZone}`;
                     let rateObj = deliveryRates[key1] || deliveryRates[key2];
                     if (rateObj) {
                         deliveryFee = rateObj[serviceType] || 3000;
                     } else {
-                        deliveryFee = 4000; // Default fallback fee
+                        deliveryFee = 4000;
                     }
                 }
             }
@@ -264,10 +270,11 @@
             document.getElementById('total-price').innerText = grandTotal.toLocaleString() + " ကျပ်";
         }
 
-        function submitOrder() {
+        async function submitOrder() {
             const name = document.getElementById('cust-name').value.trim();
             const phone = document.getElementById('cust-phone').value.trim();
             const ward = document.getElementById('ward-select').value;
+            const service = document.getElementById('service-select').value;
             const address = document.getElementById('cust-address').value.trim();
 
             if(!name || !phone || !ward) {
@@ -279,7 +286,55 @@
                 return;
             }
 
-            alert("အော်ဒါအောင်မြင်စွာ တင်ပြီးပါပြီ! ကျေးဇူးတင်ပါသည်။");
+            let subtotal = Object.values(cart).reduce((sum, item) => sum + (Number(item.Price) * item.qty), 0);
+            let deliveryFee = 0;
+            const wardSelect = document.getElementById('ward-select');
+            const selectedOption = wardSelect.options[wardSelect.selectedIndex];
+            const customerZone = selectedOption.getAttribute('data-zone') || getZone(ward);
+            const isAdj = checkAdjacent(shopWard, ward);
+
+            if (shopZone === customerZone || isAdj) {
+                if (service === 'express') deliveryFee = 3500;
+                else if (service === 'normal') deliveryFee = 2500;
+                else deliveryFee = 1500;
+            } else {
+                let key1 = `${shopZone}-${customerZone}`;
+                let key2 = `${customerZone}-${shopZone}`;
+                let rateObj = deliveryRates[key1] || deliveryRates[key2];
+                if (rateObj) {
+                    deliveryFee = rateObj[service] || 3000;
+                } else {
+                    deliveryFee = 4000;
+                }
+            }
+            let totalAmount = subtotal + deliveryFee;
+
+            let orderData = {
+                name: name,
+                phone: phone,
+                ward: ward,
+                service: service,
+                address: address,
+                items: Object.values(cart).map(i => `${i.ItemName} (${i.Price}x${i.qty})`),
+                total: totalAmount
+            };
+
+            try {
+                let response = await fetch(API_URL, {
+                    method: "POST",
+                    body: JSON.stringify(orderData)
+                });
+                let result = await response.json();
+                if (result.status === "success") {
+                    alert("အော်ဒါအောင်မြင်စွာ တင်ပြီးပါပြီ!");
+                    location.reload();
+                } else {
+                    alert("အော်ဒါတင်ရာတွင် အမှားအယွင်းရှိပါသည်: " + result.message);
+                }
+            } catch (err) {
+                console.error(err);
+                alert("ဆာဗာသို့ ချိတ်ဆက်၍ မရပါ။");
+            }
         }
 
         fetchData();
