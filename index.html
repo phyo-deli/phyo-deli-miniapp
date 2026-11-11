@@ -140,9 +140,8 @@
     </div>
 
     <script>
-        const API_URL = "https://script.google.com/macros/s/AKfycby2bQuLVSzwFL05iehVtQZMCzvRJhx-WI7ndq51hv2BLSJ6BRm2s8YTM7I_IYUPqbSnoQ/exec";
+        const API_URL = "https://script.google.com/macros/s/AKfycbyMLygmlRqHNoIPKFUpL38TJ4yy7eNufTyYJ01AzUZylAieNLr-UKx4z6fmOAfInw7sFg/exec";
 
-        // Telegram WebApp ၏ startapp သို့မဟုတ် URL ၏ ?shop= ကို ဦးစားပေး ဖမ်းယူခြင်း
         const urlParams = new URLSearchParams(window.location.search);
         const tg = window.Telegram && window.Telegram.WebApp ? window.Telegram.WebApp : null;
 
@@ -161,8 +160,9 @@
         let currentSubtotal = 0;
         let currentDeliveryFee = 0;
 
-        const shopWard = 'မြိုင်သာယာရပ်ကွက်';
-        const shopZone = 'B';
+        // Sheet မှ တိုက်ရိုက်ဖတ်ယူမည့် ဆိုင်တည်နေရာဇုန် (Default)
+        let shopWard = 'မြိုင်သာယာရပ်ကွက်';
+        let shopZone = 'B';
 
         const wardZones = {
             'A': ['မန္တလေးရပ်ကွက်','ဖက်တန်းရပ်ကွက်','ရွှေတောင်ရပ်ကွက်','စစ်ကဲကုန်းရပ်ကွက်','မရမ်းကုန်းရပ်ကွက်','ပန်းပဲတန်းရပ်ကွက်','ဘိုကုန်းရပ်ကွက်','မောင်ငံရပ်ကွက်'],
@@ -359,11 +359,26 @@
 
         async function fetchData() {
             try {
+                // 1. ဆိုင်၏ Product များ ရယူရန်
                 let resProd = await fetch(`${API_URL}?shop=${currentShop}`);
                 let dataProd = await resProd.json();
                 products = dataProd.products || [];
                 renderProducts();
                 renderWards();
+
+                // 2. Google Sheet ရှိ Shops (Ward & Zone) ကိုပါ တိုက်ရိုက်ဖတ်ယူရန်
+                let resZones = await fetch(`${API_URL}?action=zones`);
+                let dataZones = await resZones.json();
+                
+                if (dataZones.shops) {
+                    let foundShop = dataZones.shops.find(s => 
+                        String(s.ShopID).toLowerCase().trim() === String(currentShop).toLowerCase().trim()
+                    );
+                    if (foundShop) {
+                        shopWard = foundShop.Ward || 'မြိုင်သာယာရပ်ကွက်';
+                        shopZone = foundShop.Zone || 'B';
+                    }
+                }
             } catch (err) {
                 console.error("Error loading data:", err);
             }
