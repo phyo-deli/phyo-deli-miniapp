@@ -140,7 +140,7 @@
     </div>
 
     <script>
-        const API_URL = "https://script.google.com/macros/s/AKfycbyMLygmlRqHNoIPKFUpL38TJ4yy7eNufTyYJ01AzUZylAieNLr-UKx4z6fmOAfInw7sFg/exec";
+        const API_URL = "https://script.google.com/macros/s/AKfycbyy9LfA7TkV-eBynrkYFuZ3Ss2VT9S54ETtRRVZ_W7c2bUy_uuI5b3vzHA_zuBBj9khJw/exec";
 
         const urlParams = new URLSearchParams(window.location.search);
         const tg = window.Telegram && window.Telegram.WebApp ? window.Telegram.WebApp : null;
@@ -155,16 +155,14 @@
         const currentShop = shopParam;
 
         let products = [];
-        let wards = [];
         let cart = {};
         let currentSubtotal = 0;
         let currentDeliveryFee = 0;
 
-        // Sheet မှ တိုက်ရိုက်ဖတ်ယူမည့် ဆိုင်တည်နေရာဇုန် (Default)
         let shopWard = 'မြိုင်သာယာရပ်ကွက်';
         let shopZone = 'B';
 
-        const wardZones = {
+        let wardZones = {
             'A': ['မန္တလေးရပ်ကွက်','ဖက်တန်းရပ်ကွက်','ရွှေတောင်ရပ်ကွက်','စစ်ကဲကုန်းရပ်ကွက်','မရမ်းကုန်းရပ်ကွက်','ပန်းပဲတန်းရပ်ကွက်','ဘိုကုန်းရပ်ကွက်','မောင်ငံရပ်ကွက်'],
             'B': ['ကွင်းကျောင်းရပ်ကွက်','သီရီမြိုင်ရပ်ကွက်','သီရီမင်္ဂလာရပ်ကွက်','ဈေးကြိုရပ်ကွက်','မြိုင်သာယာရပ်ကွက်','ကျွဲခြံကုန်းရပ်ကွက်','ငန်းတေးရပ်ကွက်','ဇေယျာမြိုင်ရပ်ကွက်'],
             'C': ['အောက်ကျင်းရပ်ကွက်','ရွှေမြိုင်သီရီရပ်ကွက်','ဇေယျာချမ်းမြေ့ရပ်ကွက်','သာယာအေးရပ်ကွက်','လှိုင်ရပ်ကွက်','ရွှေပြည်အေးရပ်ကွက်','မြေနီကုန်းရပ်ကွက်'],
@@ -174,7 +172,7 @@
             'G': ['စက်မှုဇုန်ရပ်ကွက်','ညောင်ပင်ဆိပ်ရပ်ကွက်']
         };
 
-        const deliveryRates = {
+        let deliveryRates = {
             "A-B": { express: 4500, normal: 3000 }, "B-A": { express: 4500, normal: 3000 },
             "A-C": { express: 4500, normal: 3000 }, "C-A": { express: 4500, normal: 3000 },
             "A-D": { express: 5500, normal: 3500 }, "D-A": { express: 5500, normal: 3500 },
@@ -267,7 +265,7 @@
                             <div><strong>ပို့ဆောင်ခ:</strong> ${Number(del || 0).toLocaleString()} ကျပ်</div>
                             <div class="flex justify-between font-bold text-red-600 pt-1 border-t">
                                 <span>စုစုပေါင်းငွေ:</span>
-                                <span>${Number(o.TotalAmount || o['Total Amount'] || 0).toLocaleString()} ကျပ်</span>
+                                <span>${Number(o.TotalAmount || o['Total Amount'] || tot || 0).toLocaleString()} ကျပ်</span>
                             </div>
                         </div>
                     `;
@@ -364,23 +362,52 @@
                 let dataProd = await resProd.json();
                 products = dataProd.products || [];
                 renderProducts();
-                renderWards();
 
-                // 2. Google Sheet ရှိ Shops (Ward & Zone) ကိုပါ တိုက်ရိုက်ဖတ်ယူရန်
+                // 2. Google Sheet မှ Wards, Rates နှင့် Shops ဒေတာများကို ရယူပြီး ရင်းနှီးစွာ ချိတ်ဆက်ရန်
                 let resZones = await fetch(`${API_URL}?action=zones`);
                 let dataZones = await resZones.json();
                 
+                if (dataZones.wards && dataZones.wards.length > 0) {
+                    let dynamicWards = {};
+                    dataZones.wards.forEach(w => {
+                        let zoneName = w.Zone || w.zone || 'B';
+                        let wardName = w.Ward || w.ward;
+                        if (wardName) {
+                            if (!dynamicWards[zoneName]) dynamicWards[zoneName] = [];
+                            dynamicWards[zoneName].push(wardName);
+                        }
+                    });
+                    if (Object.keys(dynamicWards).length > 0) wardZones = dynamicWards;
+                }
+
+                if (dataZones.rates && dataZones.rates.length > 0) {
+                    let dynamicRates = {};
+                    dataZones.rates.forEach(r => {
+                        let routeKey = r.Route || r.route || `${r.FromZone}-${r.ToZone}`;
+                        if (routeKey) {
+                            dynamicRates[routeKey] = {
+                                express: Number(r.ExpressFee || r.express || 4000),
+                                normal: Number(r.NormalFee || r.normal || 3000)
+                            };
+                        }
+                    });
+                    if (Object.keys(dynamicRates).length > 0) deliveryRates = dynamicRates;
+                }
+
                 if (dataZones.shops) {
                     let foundShop = dataZones.shops.find(s => 
-                        String(s.ShopID).toLowerCase().trim() === String(currentShop).toLowerCase().trim()
+                        String(s.ShopID || s.ID).toLowerCase().trim() === String(currentShop).toLowerCase().trim()
                     );
                     if (foundShop) {
                         shopWard = foundShop.Ward || 'မြိုင်သာယာရပ်ကွက်';
                         shopZone = foundShop.Zone || 'B';
                     }
                 }
+                
+                renderWards();
             } catch (err) {
                 console.error("Error loading data:", err);
+                renderWards();
             }
         }
 
@@ -490,14 +517,14 @@
                     let key2 = `${customerZone}-${shopZone}`;
                     let rateObj = deliveryRates[key1] || deliveryRates[key2];
                     if (rateObj) {
-                        currentDeliveryFee = rateObj[serviceType] || 3000;
+                        currentDeliveryFee = rateObj[serviceType] || (serviceType === 'express' ? 4500 : 3000);
                     } else {
                         currentDeliveryFee = 4000;
                     }
                 }
             }
 
-            if (currentSubtotal > 0 && selectedOption.value && serviceType) {
+            if (currentSubtotal > 0 && selectedOption && selectedOption.value && serviceType) {
                 cartList.innerHTML += `
                     <div class="flex justify-between items-center pt-1 text-gray-500 text-xs font-semibold">
                         <span>🚚 ပို့ဆောင်ခ (${selectedOption.value})</span>
@@ -506,7 +533,7 @@
                 `;
             }
 
-            let grandTotal = currentSubtotal + (currentSubtotal > 0 && selectedOption.value && serviceType ? currentDeliveryFee : 0);
+            let grandTotal = currentSubtotal + (currentSubtotal > 0 && selectedOption && selectedOption.value && serviceType ? currentDeliveryFee : 0);
             document.getElementById('total-price').innerText = grandTotal.toLocaleString() + " ကျပ်";
         }
 
@@ -517,7 +544,7 @@
             const service = document.getElementById('service-select').value;
             const scheduleSelect = document.getElementById('shoppingNormalScheduleSelect');
             const scheduleText = (service === 'normal' && scheduleSelect) ? scheduleSelect.options[scheduleSelect.selectedIndex].text : "အမြန်ပို့ (ချက်ချင်း)";
-            const location = document.getElementById('cust-location').value.trim();
+            const locationVal = document.getElementById('cust-location').value.trim();
             const address = document.getElementById('cust-address').value.trim();
 
             if(!name) { alert("ကျေးဇူးပြု၍ ဝယ်သူအမည် ဖြည့်စွက်ပါ။"); document.getElementById('cust-name').focus(); return; }
@@ -534,7 +561,7 @@
                 phone: phone,
                 ward: ward,
                 service: `${service === 'normal' ? 'ပုံမှန်ပို့ (' + scheduleText + ')' : 'အမြန်ပို့'}`,
-                location: location,
+                location: locationVal,
                 address: address,
                 items: Object.values(cart).map(i => `${i.ItemName} (${i.Price}x${i.qty})`),
                 subtotal: currentSubtotal,
@@ -550,12 +577,12 @@
                 let result = await response.json();
                 
                 alert("အော်ဒါအောင်မြင်စွာ တင်ပြီးပါပြီ!");
-                location.reload();
+                window.location.reload();
 
             } catch (err) {
                 console.error(err);
                 alert("အော်ဒါအောင်မြင်စွာ တင်ပြီးပါပြီ!");
-                location.reload();
+                window.location.reload();
             }
         }
 
