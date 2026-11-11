@@ -504,6 +504,7 @@
             const selectedOption = wardSelect.options[wardSelect.selectedIndex];
             const serviceType = document.getElementById('service-select').value;
 
+            // ရပ်ကွက်နှင့် ပို့ဆောင်မှုအမျိုးအစား အပြည့်အစုံ ရွေးထားမှသာ ပို့ဆောင်ခကို တွက်မည်
             if (selectedOption && selectedOption.value && serviceType) {
                 const customerWard = selectedOption.value;
                 const customerZone = selectedOption.getAttribute('data-zone') || getZone(customerWard);
@@ -522,11 +523,7 @@
                         currentDeliveryFee = 4000;
                     }
                 }
-            } else {
-                currentDeliveryFee = 3000; // မရွေးရသေးပါက မူလနှုန်းထားသတ်မှတ်ရန်
-            }
 
-            if (currentSubtotal > 0 && selectedOption && selectedOption.value) {
                 cartList.innerHTML += `
                     <div class="flex justify-between items-center pt-1 text-gray-500 text-xs font-semibold">
                         <span>🚚 ပို့ဆောင်ခ (${selectedOption.value})</span>
@@ -535,7 +532,8 @@
                 `;
             }
 
-            let grandTotal = currentSubtotal + (currentSubtotal > 0 ? currentDeliveryFee : 0);
+            // ရပ်ကွက်မရွေးရသေးပါက ပို့ဆောင်ခ 0 ဖြင့်သာ စုစုပေါင်းတွက်မည်
+            let grandTotal = currentSubtotal + (selectedOption && selectedOption.value && serviceType ? currentDeliveryFee : 0);
             document.getElementById('total-price').innerText = grandTotal.toLocaleString() + " ကျပ်";
         }
 
