@@ -18,86 +18,113 @@
 
     <div class="p-4 max-w-md mx-auto space-y-4">
 
-        <!-- 🛒 ခြင်းတောင်းအကျဉ်းချုပ် -->
-        <div class="bg-white p-4 rounded-xl shadow-sm border">
-            <h3 class="font-bold text-base mb-2 text-gray-700 border-b pb-2 flex justify-between items-center">
-                <span>🛒 ရွေးချယ်ထားသော မီနူးများ</span>
-                <span id="cart-count-badge" class="bg-red-100 text-red-600 text-xs px-2 py-0.5 rounded-full font-bold">0 မျိုး</span>
-            </h3>
-            <div id="cart-items-list" class="space-y-2 text-sm">
-                <p class="text-gray-400 text-center py-2 text-xs">ခြင်းတောင်းထဲတွင် ပစ္စည်းမရှိသေးပါ။</p>
-            </div>
+        <!-- Tab Switcher (မီနူးမှာရန် vs အော်ဒါအခြေအနေစစ်ရန်) -->
+        <div class="flex bg-white rounded-xl shadow-sm p-1 border">
+            <button onclick="switchTab('order')" id="tab-order" class="flex-1 py-2 text-xs font-bold rounded-lg bg-red-600 text-white transition">🛒 အစားအသောက်မှာရန်</button>
+            <button onclick="switchTab('track')" id="tab-track" class="flex-1 py-2 text-xs font-bold rounded-lg text-gray-600 transition">📦 အော်ဒါအခြေအနေ</button>
         </div>
 
-        <!-- VIEW 1: MENU -->
-        <div id="view-menu" class="space-y-4">
+        <!-- ================= SECTION 1: ORDER SYSTEM ================= -->
+        <div id="section-order" class="space-y-4">
+            <!-- 🛒 ခြင်းတောင်းအကျဉ်းချုပ် -->
             <div class="bg-white p-4 rounded-xl shadow-sm border">
-                <h2 class="font-bold text-base mb-3 text-red-600 border-b pb-2">🍜 ရနိုင်သော မီနူးများ</h2>
-                <div id="product-list" class="grid grid-cols-2 gap-3"></div>
+                <h3 class="font-bold text-base mb-2 text-gray-700 border-b pb-2 flex justify-between items-center">
+                    <span>🛒 ရွေးချယ်ထားသော ခြင်းတောင်း</span>
+                    <span id="cart-count-badge" class="bg-red-100 text-red-600 text-xs px-2 py-0.5 rounded-full font-bold">0 မျိုး</span>
+                </h3>
+                <div id="cart-items-list" class="space-y-2 text-sm">
+                    <p class="text-gray-400 text-center py-2 text-xs">ခြင်းတောင်းထဲတွင် ပစ္စည်းမရှိသေးပါ။</p>
+                </div>
+            </div>
+
+            <!-- VIEW 1: MENU -->
+            <div id="view-menu" class="space-y-4">
+                <div class="bg-white p-4 rounded-xl shadow-sm border">
+                    <h2 class="font-bold text-base mb-3 text-red-600 border-b pb-2">🍜 ရနိုင်သော မီနူးများ</h2>
+                    <div id="product-list" class="grid grid-cols-2 gap-3"></div>
+                </div>
+            </div>
+
+            <!-- VIEW 2: CHECKOUT -->
+            <div id="view-checkout" class="hidden space-y-4">
+                <div class="bg-white p-4 rounded-xl shadow-sm border space-y-3">
+                    <h3 class="font-bold text-base text-gray-700 border-b pb-2">📍 ပို့ဆောင်ရမည့် လိပ်စာနှင့် အချက်အလက်</h3>
+                    
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-600 mb-1">ဝယ်သူအမည် <span class="text-red-500">*</span></label>
+                        <input type="text" id="cust-name" placeholder="အမည်ထည့်ပါ..." class="w-full p-2.5 border rounded-lg text-sm bg-gray-50 focus:bg-white transition">
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-600 mb-1">ဖုန်းနံပါတ် <span class="text-red-500">*</span></label>
+                        <input type="tel" id="cust-phone" placeholder="09xxxxxxxxx" class="w-full p-2.5 border rounded-lg text-sm bg-gray-50 focus:bg-white transition">
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-600 mb-1">သင့်ရပ်ကွက်ကို ရွေးပါ <span class="text-red-500">*</span></label>
+                        <select id="ward-select" onchange="calculateTotal()" class="w-full p-2.5 border rounded-lg text-sm bg-gray-50 focus:bg-white transition">
+                            <option value="">ရပ်ကွက် ရွေးပါ...</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-600 mb-1">ပို့ဆောင်မည့် အမျိုးအစား <span class="text-red-500">*</span></label>
+                        <select id="service-select" onchange="toggleServiceOptions()" class="w-full p-2.5 border rounded-lg text-sm bg-gray-50 focus:bg-white transition">
+                            <option value="">ပို့ဆောင်မှု အမျိုးအစား ရွေးပါ...</option>
+                            <option value="normal">ပုံမှန်ပို့</option>
+                            <option value="express">အမြန်ပို့</option>
+                        </select>
+                    </div>
+
+                    <div id="normal-schedule-container" class="hidden bg-blue-50 p-3 rounded-xl border border-blue-200 space-y-1">
+                        <label class="block font-bold text-blue-900 text-xs sm:text-sm mb-1">⏰ ပုံမှန်ပို့ အချိန်ဇယား ရွေးချယ်ပါ -</label>
+                        <select id="shoppingNormalScheduleSelect" class="w-full p-2.5 border rounded-xl bg-white font-bold text-gray-800 focus:ring-2 focus:ring-blue-400 outline-none text-xs sm:text-sm">
+                            <option value="batch1" data-cutoff="08:30">မနက် ၈:၃၀ အော်ဒါပိတ် - ၉:၀၀ စပို့ (ရောက်ရှိချိန်: ၉:၀၀ မှ ၁၁:၀၀ အတွင်း)</option>
+                            <option value="batch2" data-cutoff="10:30">မနက် ၁၀:၃၀ အော်ဒါပိတ် - ၁၁:၀၀ စပို့ (ရောက်ရှိချိန်: ၁၁:၀၀ မှ ၁:၀၀ အတွင်း)</option>
+                            <option value="batch3" data-cutoff="12:30">နေ့လယ် ၁၂:၃၀ အော်ဒါပိတ် - ၁:၀၀ စပို့ (ရောက်ရှိချိန်: ၁:၀၀ မှ ၃:၀၀ အတွင်း)</option>
+                            <option value="batch4" data-cutoff="14:30">ညနေ ၂:၃၀ အော်ဒါပိတ် - ၃:၀၀ စပို့ (ရောက်ရှိချိန်: ၃:၀၀ မှ ၅:၀၀ အတွင်း)</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <div class="flex justify-between items-center mb-1">
+                            <label class="block text-xs font-semibold text-gray-600">တည်နေရာ (Lat, Long သို့မဟုတ် Google Map Link)</label>
+                            <button type="button" onclick="getLocation()" class="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded font-bold hover:bg-blue-200">
+                                📍 လက်ရှိတည်နေရာ ရယူမည်
+                            </button>
+                        </div>
+                        <input type="text" id="cust-location" placeholder="Google Map Link (သို့) 16.2891, 97.6321..." class="w-full p-2.5 border rounded-lg text-sm bg-gray-50 focus:bg-white transition">
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-600 mb-1">အသေးစိတ် လိပ်စာ / မှတ်ချက်</label>
+                        <textarea id="cust-address" placeholder="အိမ်နံပါတ်၊ လမ်းနာမည်..." class="w-full p-2.5 border rounded-lg text-sm bg-gray-50 focus:bg-white transition" rows="2"></textarea>
+                    </div>
+                </div>
             </div>
         </div>
 
-        <!-- VIEW 2: CHECKOUT -->
-        <div id="view-checkout" class="hidden space-y-4">
+        <!-- ================= SECTION 2: TRACK ORDER VIEW ================= -->
+        <div id="section-track" class="hidden space-y-4">
             <div class="bg-white p-4 rounded-xl shadow-sm border space-y-3">
-                <h3 class="font-bold text-base text-gray-700 border-b pb-2">📍 ပို့ဆောင်ရမည့် လိပ်စာနှင့် အချက်အလက်</h3>
-                
+                <h3 class="font-bold text-base text-gray-700 border-b pb-2">📦 အော်ဒါအခြေအနေ စစ်ဆေးရန်</h3>
                 <div>
-                    <label class="block text-xs font-semibold text-gray-600 mb-1">ဝယ်သူအမည် <span class="text-red-500">*</span></label>
-                    <input type="text" id="cust-name" placeholder="အမည်ထည့်ပါ..." class="w-full p-2.5 border rounded-lg text-sm bg-gray-50 focus:bg-white transition">
-                </div>
-
-                <div>
-                    <label class="block text-xs font-semibold text-gray-600 mb-1">ဖုန်းနံပါတ် <span class="text-red-500">*</span></label>
-                    <input type="tel" id="cust-phone" placeholder="09xxxxxxxxx" class="w-full p-2.5 border rounded-lg text-sm bg-gray-50 focus:bg-white transition">
-                </div>
-
-                <div>
-                    <label class="block text-xs font-semibold text-gray-600 mb-1">သင့်ရပ်ကွက်ကို ရွေးပါ <span class="text-red-500">*</span></label>
-                    <select id="ward-select" onchange="calculateTotal()" class="w-full p-2.5 border rounded-lg text-sm bg-gray-50 focus:bg-white transition">
-                        <option value="">ရပ်ကွက် ရွေးပါ...</option>
-                    </select>
-                </div>
-
-                <div>
-                    <label class="block text-xs font-semibold text-gray-600 mb-1">ပို့ဆောင်မည့် အမျိုးအစား <span class="text-red-500">*</span></label>
-                    <select id="service-select" onchange="toggleServiceOptions()" class="w-full p-2.5 border rounded-lg text-sm bg-gray-50 focus:bg-white transition">
-                        <option value="">ပို့ဆောင်မှု အမျိုးအစား ရွေးပါ...</option>
-                        <option value="normal">ပုံမှန်ပို့</option>
-                        <option value="express">အမြန်ပို့</option>
-                    </select>
-                </div>
-
-                <div id="normal-schedule-container" class="hidden bg-blue-50 p-3 rounded-xl border border-blue-200 space-y-1">
-                    <label class="block font-bold text-blue-900 text-xs sm:text-sm mb-1">⏰ ပုံမှန်ပို့ အချိန်ဇယား ရွေးချယ်ပါ -</label>
-                    <select id="shoppingNormalScheduleSelect" class="w-full p-2.5 border rounded-xl bg-white font-bold text-gray-800 focus:ring-2 focus:ring-blue-400 outline-none text-xs sm:text-sm">
-                        <option value="batch1" data-cutoff="08:30">မနက် ၈:၃၀ အော်ဒါပိတ် - ၉:၀၀ စပို့ (ရောက်ရှိချိန်: ၉:၀၀ မှ ၁၁:၀၀ အတွင်း)</option>
-                        <option value="batch2" data-cutoff="10:30">မနက် ၁၀:၃၀ အော်ဒါပိတ် - ၁၁:၀၀ စပို့ (ရောက်ရှိချိန်: ၁၁:၀၀ မှ ၁:၀၀ အတွင်း)</option>
-                        <option value="batch3" data-cutoff="12:30">နေ့လယ် ၁၂:၃၀ အော်ဒါပိတ် - ၁:၀၀ စပို့ (ရောက်ရှိချိန်: ၁:၀၀ မှ ၃:၀၀ အတွင်း)</option>
-                        <option value="batch4" data-cutoff="14:30">ညနေ ၂:၃၀ အော်ဒါပိတ် - ၃:၀၀ စပို့ (ရောက်ရှိချိန်: ၃:၀၀ မှ ၅:၀၀ အတွင်း)</option>
-                    </select>
-                </div>
-
-                <div>
-                    <div class="flex justify-between items-center mb-1">
-                        <label class="block text-xs font-semibold text-gray-600">တည်နေရာ (Lat, Long သို့မဟုတ် Google Map Link)</label>
-                        <button type="button" onclick="getLocation()" class="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded font-bold hover:bg-blue-200">
-                            📍 လက်ရှိတည်နေရာ ရယူမည်
-                        </button>
+                    <label class="block text-xs font-semibold text-gray-600 mb-1">သင်၏ ဖုန်းနံပါတ်ထည့်ပါ</label>
+                    <div class="flex gap-2">
+                        <input type="tel" id="track-phone" placeholder="09xxxxxxxxx" class="w-full p-2.5 border rounded-lg text-sm bg-gray-50 focus:bg-white transition">
+                        <button onclick="trackOrder()" class="bg-red-600 text-white px-4 py-2.5 rounded-lg font-bold text-sm hover:bg-red-700">ရှာမည်</button>
                     </div>
-                    <input type="text" id="cust-location" placeholder="Google Map Link (သို့) 16.2891, 97.6321..." class="w-full p-2.5 border rounded-lg text-sm bg-gray-50 focus:bg-white transition">
                 </div>
-
-                <div>
-                    <label class="block text-xs font-semibold text-gray-600 mb-1">အသေးစိတ် လိပ်စာ / မှတ်ချက်</label>
-                    <textarea id="cust-address" placeholder="အိမ်နံပါတ်၊ လမ်းနာမည်..." class="w-full p-2.5 border rounded-lg text-sm bg-gray-50 focus:bg-white transition" rows="2"></textarea>
+                <div id="track-result" class="space-y-3 mt-4">
+                    <p class="text-gray-400 text-center text-xs py-4">ဖုန်းနံပါတ်ထည့်၍ ရှာဖွေပါ။</p>
                 </div>
             </div>
         </div>
 
     </div>
 
-    <div class="fixed bottom-0 left-0 right-0 bg-white border-t p-4 shadow-2xl max-w-md mx-auto flex justify-between items-center z-50 rounded-t-2xl">
+    <!-- Footer / Floating Navigation Bar -->
+    <div id="order-footer" class="fixed bottom-0 left-0 right-0 bg-white border-t p-4 shadow-2xl max-w-md mx-auto flex justify-between items-center z-50 rounded-t-2xl">
         <div>
             <p class="text-xs text-gray-500">စုစုပေါင်း ကျသင့်ငွေ</p>
             <p id="total-price" class="font-bold text-lg text-red-600">0 ကျပ်</p>
@@ -113,7 +140,7 @@
     </div>
 
     <script>
-        const API_URL = "https://script.google.com/macros/s/AKfycbwxY__r0pwVSIOOu-i7Gsm48BB3m7GvLw_UUKRCKEeh-i0GMdmG0xEp6104NPT8BuQCZQ/exec"; 
+        const API_URL = "https://script.google.com/macros/s/AKfycbzJ-ce7x_YkRfasm-OSGSM19Pkka-B_DEhP25PfnlLw1DkejXj5kEXFMs8Vp1zgFIH--Q/exec"; 
 
         let products = [];
         let wards = [];
@@ -155,6 +182,78 @@
             "E-G": { express: 9000, normal: 4500 }, "G-E": { express: 9000, normal: 4500 },
             "F-G": { express: 6500, normal: 4000 }, "G-F": { express: 6500, normal: 4000 }
         };
+
+        function switchTab(tab) {
+            const secOrder = document.getElementById('section-order');
+            const secTrack = document.getElementById('section-track');
+            const tabOrder = document.getElementById('tab-order');
+            const tabTrack = document.getElementById('tab-track');
+            const footer = document.getElementById('order-footer');
+
+            if (tab === 'track') {
+                secOrder.classList.add('hidden');
+                secTrack.classList.remove('hidden');
+                tabTrack.className = "flex-1 py-2 text-xs font-bold rounded-lg bg-red-600 text-white transition";
+                tabOrder.className = "flex-1 py-2 text-xs font-bold rounded-lg text-gray-600 transition";
+                footer.classList.add('hidden');
+            } else {
+                secTrack.classList.add('hidden');
+                secOrder.classList.remove('hidden');
+                tabOrder.className = "flex-1 py-2 text-xs font-bold rounded-lg bg-red-600 text-white transition";
+                tabTrack.className = "flex-1 py-2 text-xs font-bold rounded-lg text-gray-600 transition";
+                footer.classList.remove('hidden');
+            }
+        }
+
+        async function trackOrder() {
+            const phone = document.getElementById('track-phone').value.trim();
+            const resultDiv = document.getElementById('track-result');
+
+            if (!phone) {
+                alert("ကျေးဇူးပြု၍ ဖုန်းနံပါတ်ထည့်ပါ။");
+                return;
+            }
+
+            resultDiv.innerHTML = `<p class="text-center text-gray-400 py-4 text-xs">ရှာဖွေနေပါသည်...</p>`;
+
+            try {
+                let res = await fetch(`${API_URL}?action=track&phone=${phone}`);
+                let data = await res.json();
+                let orders = data.orders || [];
+
+                if (orders.length === 0) {
+                    resultDiv.innerHTML = `<p class="text-center text-red-500 py-4 text-xs">ဤဖုန်းနံပါတ်ဖြင့် အော်ဒါမတွေ့ရှိပါ။</p>`;
+                    return;
+                }
+
+                resultDiv.innerHTML = orders.reverse().map(o => `
+                    <div class="bg-gray-50 p-3 rounded-xl border space-y-2 text-xs shadow-xs">
+                        <div class="flex justify-between items-center border-b pb-1">
+                            <span class="font-bold text-gray-600">🕒 ${new Date(o.Timestamp).toLocaleString()}</span>
+                            <span class="px-2 py-0.5 rounded-full font-bold ${getBadgeColor(o.Status)}">${o.Status || 'လက်ခံရရှိထားပါသည်'}</span>
+                        </div>
+                        <div><strong>ပစ္စည်းများ:</strong> ${o.Items}</div>
+                        <div><strong>ပို့ဆောင်ခ:</strong> ${Number(o.DeliveryFee || 0).toLocaleString()} ကျပ်</div>
+                        <div class="flex justify-between font-bold text-red-600 pt-1 border-t">
+                            <span>စုစုပေါင်းငွေ:</span>
+                            <span>${Number(o.TotalAmount || 0).toLocaleString()} ကျပ်</span>
+                        </div>
+                    </div>
+                `).join('');
+
+            } catch (err) {
+                console.error(err);
+                resultDiv.innerHTML = `<p class="text-center text-red-500 py-4 text-xs">အချက်အလက် ရယူရာတွင် အမှားအယွင်းရှိပါသည်။</p>`;
+            }
+        }
+
+        function getBadgeColor(status) {
+            if (!status) return 'bg-yellow-100 text-yellow-700';
+            if (status.includes('ပြင်ဆင်')) return 'bg-blue-100 text-blue-700';
+            if (status.includes('ပို့ဆောင်')) return 'bg-purple-100 text-purple-700';
+            if (status.includes('ပြီးဆုံး') || status.includes('ရောက်')) return 'bg-green-100 text-green-700';
+            return 'bg-gray-200 text-gray-700';
+        }
 
         function getLocation() {
             if (navigator.geolocation) {
@@ -374,31 +473,11 @@
             const location = document.getElementById('cust-location').value.trim();
             const address = document.getElementById('cust-address').value.trim();
 
-            if(!name) {
-                alert("ကျေးဇူးပြု၍ ဝယ်သူအမည် ဖြည့်စွက်ပါ။");
-                document.getElementById('cust-name').focus();
-                return;
-            }
-            if(!phone) {
-                alert("ကျေးဇူးပြု၍ ဖုန်းနံပါတ် ဖြည့်စွက်ပါ။");
-                document.getElementById('cust-phone').focus();
-                return;
-            }
-            if(!ward) {
-                alert("ကျေးဇူးပြု၍ သင့်ရပ်ကွက်ကို ရွေးချယ်ပါ။");
-                document.getElementById('ward-select').focus();
-                return;
-            }
-            if(!service) {
-                alert("ကျေးဇူးပြု၍ ပို့ဆောင်မည့် အမျိုးအစား ကို ရွေးချယ်ပါ။");
-                document.getElementById('service-select').focus();
-                return;
-            }
-            if(Object.keys(cart).length === 0) {
-                alert("ကျေးဇူးပြု၍ မီနူးပစ္စည်း အနည်းဆုံး တစ်ခု ရွေးချယ်ပါ။");
-                switchView('menu');
-                return;
-            }
+            if(!name) { alert("ကျေးဇူးပြု၍ ဝယ်သူအမည် ဖြည့်စွက်ပါ။"); document.getElementById('cust-name').focus(); return; }
+            if(!phone) { alert("ကျေးဇူးပြု၍ ဖုန်းနံပါတ် ဖြည့်စွက်ပါ။"); document.getElementById('cust-phone').focus(); return; }
+            if(!ward) { alert("ကျေးဇူးပြု၍ သင့်ရပ်ကွက်ကို ရွေးချယ်ပါ။"); document.getElementById('ward-select').focus(); return; }
+            if(!service) { alert("ကျေးဇူးပြု၍ ပို့ဆောင်မည့် အမျိုးအစား ကို ရွေးချယ်ပါ။"); document.getElementById('service-select').focus(); return; }
+            if(Object.keys(cart).length === 0) { alert("ကျေးဇူးပြု၍ မီနူးပစ္စည်း အနည်းဆုံး တစ်ခု ရွေးချယ်ပါ။"); switchView('menu'); return; }
 
             let totalAmount = currentSubtotal + currentDeliveryFee;
 
