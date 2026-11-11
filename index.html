@@ -206,46 +206,65 @@
         }
 
         async function trackOrder() {
-            const phone = document.getElementById('track-phone').value.trim();
-            const resultDiv = document.getElementById('track-result');
+    const phone = document.getElementById('track-phone').value.trim();
+    const resultDiv = document.getElementById('track-result');
 
-            if (!phone) {
-                alert("ကျေးဇူးပြု၍ ဖုန်းနံပါတ်ထည့်ပါ။");
-                return;
-            }
+    if (!phone) {
+        alert("ကျေးဇူးပြု၍ ဖုန်းနံပါတ်ထည့်ပါ။");
+        return;
+    }
 
-            resultDiv.innerHTML = `<p class="text-center text-gray-400 py-4 text-xs">ရှာဖွေနေပါသည်...</p>`;
+    resultDiv.innerHTML = `<p class="text-center text-gray-400 py-4 text-xs">ရှာဖွေနေပါသည်...</p>`;
 
-            try {
-                let res = await fetch(`${API_URL}?action=track&phone=${phone}`);
-                let data = await res.json();
-                let orders = data.orders || [];
+    try {
+        let res = await fetch(`${API_URL}?action=track&phone=${phone}`);
+        let data = await res.json();
+        let orders = data.orders || [];
 
-                if (orders.length === 0) {
-                    resultDiv.innerHTML = `<p class="text-center text-red-500 py-4 text-xs">ဤဖုန်းနံပါတ်ဖြင့် အော်ဒါမတွေ့ရှိပါ။</p>`;
-                    return;
-                }
-
-                resultDiv.innerHTML = orders.reverse().map(o => `
-    <div class="bg-gray-50 p-3 rounded-xl border space-y-2 text-xs shadow-xs">
-        <div class="flex justify-between items-center border-b pb-1">
-            <span class="font-bold text-gray-600">🕒 ${new Date(o.Timestamp).toLocaleString()}</span>
-            <span class="px-2 py-0.5 rounded-full font-bold ${getBadgeColor(o.Status)}">${o.Status || 'လက်ခံရရှိထားပါသည်'}</span>
-        </div>
-        <div><strong>ပစ္စည်းများ:</strong> ${o.Items || ''}</div>
-        <div><strong>ကုန်ဖိုး:</strong> ${Number(o.Subtotal || o['Subtotal (ကျပ်)'] || o['Subtotal'] || 0).toLocaleString()} ကျပ်</div>
-        <div><strong>ပို့ဆောင်ခ:</strong> ${Number(o.DeliveryFee || o['Delivery Fee (ကျပ်)'] || o['Delivery Fee'] || 0).toLocaleString()} ကျပ်</div>
-        <div class="flex justify-between font-bold text-red-600 pt-1 border-t">
-            <span>စုစုပေါင်းငွေ:</span>
-            <span>${Number(o.TotalAmount || o['Total Amount'] || 0).toLocaleString()} ကျပ်</span>
-        </div>
-    </div>
-`).join('');
-            } catch (err) {
-                console.error(err);
-                resultDiv.innerHTML = `<p class="text-center text-red-500 py-4 text-xs">အချက်အလက် ရယူရာတွင် အမှားအယွင်းရှိပါသည်။</p>`;
-            }
+        if (orders.length === 0) {
+            resultDiv.innerHTML = `<p class="text-center text-red-500 py-4 text-xs">ဤဖုန်းနံပါတ်ဖြင့် အော်ဒါမတွေ့ရှိပါ။</p>`;
+            return;
         }
+
+        resultDiv.innerHTML = orders.reverse().map(o => {
+            // Google Sheet ထဲက Column Key တွေကို အလိုအလျောက် ရှာဖွေပေးမည့် Helper Function
+            function findVal(keywords) {
+                for (let k in o) {
+                    let lk = k.toLowerCase();
+                    if (keywords.some(kw => lk.includes(kw))) {
+                        let val = o[k];
+                        if (val !== undefined && val !== null && val !== '') return val;
+                    }
+                }
+                return 0;
+            }
+
+            let sub = findVal(['subtotal', 'ကုန်ဖိုး']);
+            let del = findVal(['delivery', 'ဒလီ', 'ပို့ဆောင်ခ']);
+            let tot = findVal(['total', 'စုစုပေါင်း']);
+
+            return `
+                <div class="bg-gray-50 p-3 rounded-xl border space-y-2 text-xs shadow-xs">
+                    <div class="flex justify-between items-center border-b pb-1">
+                        <span class="font-bold text-gray-600">🕒 ${new Date(o.Timestamp || Date.now()).toLocaleString()}</span>
+                        <span class="px-2 py-0.5 rounded-full font-bold ${getBadgeColor(o.Status)}">${o.Status || 'လက်ခံရရှိထားပါသည်'}</span>
+                    </div>
+                    <div><strong>ပစ္စည်းများ:</strong> ${o.Items || ''}</div>
+                    <div><strong>ကုန်ဖိုး:</strong> ${Number(sub || 0).toLocaleString()} ကျပ်</div>
+                    <div><strong>ပို့ဆောင်ခ:</strong> ${Number(del || 0).toLocaleString()} ကျပ်</div>
+                    <div class="flex justify-between font-bold text-red-600 pt-1 border-t">
+                        <span>စုစုပေါင်းငွေ:</span>
+                        <span>${Number(tot || 0).toLocaleString()} ကျပ်</span>
+                    </div>
+                </div>
+            `;
+        }).join('');
+
+    } catch (err) {
+        console.error(err);
+        resultDiv.innerHTML = `<p class="text-center text-red-500 py-4 text-xs">အချက်အလက် ရယူရာတွင် အမှားအယွင်းရှိပါသည်။</p>`;
+    }
+}
 
         function getBadgeColor(status) {
             if (!status) return 'bg-yellow-100 text-yellow-700';
