@@ -378,7 +378,7 @@
             list.innerHTML = products.map(p => `
                 <div class="bg-gray-50 p-2.5 rounded-xl border flex flex-col justify-between hover:shadow-md transition">
                     <img src="${p.ImageURL}" class="w-full h-28 object-cover rounded-lg mb-2">
-                    <h3 class="font-semibold text-xs text-gray-800 line-clamp-1">${p.ItemName}</h3>
+                    <h3 class="font-semibold text-xs text-gray-800 line-clamp-2">${p.ItemName}</h3>
                     <p class="text-red-600 font-bold text-xs my-1">${p.Price} ကျပ်</p>
                     <div class="flex items-center justify-between bg-white border rounded-lg p-1 shadow-xs">
                         <button onclick="updateQty('${p.ItemID}', -1)" class="w-6 h-6 flex items-center justify-center bg-gray-100 rounded-md font-bold text-gray-600 hover:bg-gray-200">-</button>
