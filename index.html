@@ -232,16 +232,15 @@
             <span class="font-bold text-gray-600">🕒 ${new Date(o.Timestamp).toLocaleString()}</span>
             <span class="px-2 py-0.5 rounded-full font-bold ${getBadgeColor(o.Status)}">${o.Status || 'လက်ခံရရှိထားပါသည်'}</span>
         </div>
-        <div><strong>ပစ္စည်းများ:</strong> ${o.Items || o['Items'] || ''}</div>
-        <div><strong>ကုန်ဖိုး:</strong> ${Number(o.Subtotal || o['Subtotal (ကျပ်)'] || 0).toLocaleString()} ကျပ်</div>
-        <div><strong>ပို့ဆောင်ခ:</strong> ${Number(o.DeliveryFee || o['Delivery Fee (ကျပ်)'] || 0).toLocaleString()} ကျပ်</div>
+        <div><strong>ပစ္စည်းများ:</strong> ${o.Items || ''}</div>
+        <div><strong>ကုန်ဖိုး:</strong> ${Number(o.Subtotal || o['Subtotal (ကျပ်)'] || o['Subtotal'] || 0).toLocaleString()} ကျပ်</div>
+        <div><strong>ပို့ဆောင်ခ:</strong> ${Number(o.DeliveryFee || o['Delivery Fee (ကျပ်)'] || o['Delivery Fee'] || 0).toLocaleString()} ကျပ်</div>
         <div class="flex justify-between font-bold text-red-600 pt-1 border-t">
             <span>စုစုပေါင်းငွေ:</span>
             <span>${Number(o.TotalAmount || o['Total Amount'] || 0).toLocaleString()} ကျပ်</span>
         </div>
     </div>
 `).join('');
-
             } catch (err) {
                 console.error(err);
                 resultDiv.innerHTML = `<p class="text-center text-red-500 py-4 text-xs">အချက်အလက် ရယူရာတွင် အမှားအယွင်းရှိပါသည်။</p>`;
