@@ -81,7 +81,7 @@
                         <select id="shoppingNormalScheduleSelect" class="w-full p-2.5 border rounded-xl bg-white font-bold text-gray-800 focus:ring-2 focus:ring-blue-400 outline-none text-xs sm:text-sm">
                             <option value="batch1" data-cutoff="08:30">မနက် ၈:၃၀ အော်ဒါပိတ် - ၉:၀၀ စပို့ (ရောက်ရှိချိန်: ၉:၀၀ မှ ၁၁:၀၀ အတွင်း)</option>
                             <option value="batch2" data-cutoff="10:30">မနက် ၁၀:၃၀ အော်ဒါပိတ် - ၁၁:၀၀ စပို့ (ရောက်ရှိချိန်: ၁၁:၀၀ မှ ၁:၀၀ အတွင်း)</option>
-                            <option value="batch3" data-cutoff="12:30">နေ့လယ် ၁၂:၃၀ အော်ဒါပိတ် - ၁:၀၀ စပို့ (ရောက်ရှိချိန်: ၁:၀၀ မှ 3:၀၀ အတွင်း)</option>
+                            <option value="batch3" data-cutoff="12:30">နေ့လယ် ၁၂:၃၀ အော်ဒါပိတ် - ၁:၀၀ စပို့ (ရောက်ရှိချိန်: ၁:၀၀ မှ ၃:၀၀ အတွင်း)</option>
                             <option value="batch4" data-cutoff="14:30">ညနေ ၂:၃၀ အော်ဒါပိတ် - ၃:၀၀ စပို့ (ရောက်ရှိချိန်: ၃:၀၀ မှ ၅:၀၀ အတွင်း)</option>
                         </select>
                     </div>
@@ -142,9 +142,18 @@
     <script>
         const API_URL = "https://script.google.com/macros/s/AKfycby2bQuLVSzwFL05iehVtQZMCzvRJhx-WI7ndq51hv2BLSJ6BRm2s8YTM7I_IYUPqbSnoQ/exec";
 
-        // URL ထဲမှ ?shop= တန်ဖိုးကို ဖတ်ယူခြင်း (မပါလာပါက Shop1 ဟု သတ်မှတ်မည်)
+        // Telegram WebApp ၏ startapp သို့မဟုတ် URL ၏ ?shop= ကို ဦးစားပေး ဖမ်းယူခြင်း
         const urlParams = new URLSearchParams(window.location.search);
-        const currentShop = urlParams.get('shop') || 'Shop1';
+        const tg = window.Telegram && window.Telegram.WebApp ? window.Telegram.WebApp : null;
+
+        let shopParam = 'Shop1';
+        if (tg && tg.initDataUnsafe && tg.initDataUnsafe.start_param) {
+            shopParam = tg.initDataUnsafe.start_param;
+        } else {
+            shopParam = urlParams.get('shop') || 'Shop1';
+        }
+
+        const currentShop = shopParam;
 
         let products = [];
         let wards = [];
@@ -350,7 +359,6 @@
 
         async function fetchData() {
             try {
-                // URL မှ shop parameter ကို ထည့်သွင်း၍ မီနူးများကို တောင်းခံမည်
                 let resProd = await fetch(`${API_URL}?shop=${currentShop}`);
                 let dataProd = await resProd.json();
                 products = dataProd.products || [];
@@ -505,7 +513,6 @@
 
             let totalAmount = currentSubtotal + currentDeliveryFee;
 
-            // အော်ဒါတင်သည့်အခါ shopID ကိုပါ ထည့်သွင်းပေးခြင်း
             let orderData = {
                 shopID: currentShop, 
                 name: name,
