@@ -81,7 +81,7 @@
                         <select id="shoppingNormalScheduleSelect" class="w-full p-2.5 border rounded-xl bg-white font-bold text-gray-800 focus:ring-2 focus:ring-blue-400 outline-none text-xs sm:text-sm">
                             <option value="batch1" data-cutoff="08:30">မနက် ၈:၃၀ အော်ဒါပိတ် - ၉:၀၀ စပို့ (ရောက်ရှိချိန်: ၉:၀၀ မှ ၁၁:၀၀ အတွင်း)</option>
                             <option value="batch2" data-cutoff="10:30">မနက် ၁၀:၃၀ အော်ဒါပိတ် - ၁၁:၀၀ စပို့ (ရောက်ရှိချိန်: ၁၁:၀၀ မှ ၁:၀၀ အတွင်း)</option>
-                            <option value="batch3" data-cutoff="12:30">နေ့လယ် ၁၂:၃၀ အော်ဒါပိတ် - ၁:၀၀ စပို့ (ရောက်ရှိချိန်: ၁:၀၀ မှ ၃:၀၀ အတွင်း)</option>
+                            <option value="batch3" data-cutoff="12:30">နေ့လယ် ၁၂:၃၀ အော်ဒါပိတ် - ၁:၀၀ စပို့ (ရောက်ရှိချိန်: ၁:၀၀ မှ 3:၀၀ အတွင်း)</option>
                             <option value="batch4" data-cutoff="14:30">ညနေ ၂:၃၀ အော်ဒါပိတ် - ၃:၀၀ စပို့ (ရောက်ရှိချိန်: ၃:၀၀ မှ ၅:၀၀ အတွင်း)</option>
                         </select>
                     </div>
@@ -141,6 +141,10 @@
 
     <script>
         const API_URL = "https://script.google.com/macros/s/AKfycby2bQuLVSzwFL05iehVtQZMCzvRJhx-WI7ndq51hv2BLSJ6BRm2s8YTM7I_IYUPqbSnoQ/exec";
+
+        // URL ထဲမှ ?shop= တန်ဖိုးကို ဖတ်ယူခြင်း (မပါလာပါက Shop1 ဟု သတ်မှတ်မည်)
+        const urlParams = new URLSearchParams(window.location.search);
+        const currentShop = urlParams.get('shop') || 'Shop1';
 
         let products = [];
         let wards = [];
@@ -206,65 +210,65 @@
         }
 
         async function trackOrder() {
-    const phone = document.getElementById('track-phone').value.trim();
-    const resultDiv = document.getElementById('track-result');
+            const phone = document.getElementById('track-phone').value.trim();
+            const resultDiv = document.getElementById('track-result');
 
-    if (!phone) {
-        alert("ကျေးဇူးပြု၍ ဖုန်းနံပါတ်ထည့်ပါ။");
-        return;
-    }
-
-    resultDiv.innerHTML = `<p class="text-center text-gray-400 py-4 text-xs">ရှာဖွေနေပါသည်...</p>`;
-
-    try {
-        let res = await fetch(`${API_URL}?action=track&phone=${phone}`);
-        let data = await res.json();
-        let orders = data.orders || [];
-
-        if (orders.length === 0) {
-            resultDiv.innerHTML = `<p class="text-center text-red-500 py-4 text-xs">ဤဖုန်းနံပါတ်ဖြင့် အော်ဒါမတွေ့ရှိပါ။</p>`;
-            return;
-        }
-
-        resultDiv.innerHTML = orders.reverse().map(o => {
-            // Google Sheet ထဲက Column Key တွေကို အလိုအလျောက် ရှာဖွေပေးမည့် Helper Function
-            function findVal(keywords) {
-                for (let k in o) {
-                    let lk = k.toLowerCase();
-                    if (keywords.some(kw => lk.includes(kw))) {
-                        let val = o[k];
-                        if (val !== undefined && val !== null && val !== '') return val;
-                    }
-                }
-                return 0;
+            if (!phone) {
+                alert("ကျေးဇူးပြု၍ ဖုန်းနံပါတ်ထည့်ပါ။");
+                return;
             }
 
-            let sub = findVal(['subtotal', 'ကုန်ဖိုး']);
-            let del = findVal(['delivery', 'ဒလီ', 'ပို့ဆောင်ခ']);
-            let tot = findVal(['total', 'စုစုပေါင်း']);
+            resultDiv.innerHTML = `<p class="text-center text-gray-400 py-4 text-xs">ရှာဖွေနေပါသည်...</p>`;
 
-            return `
-                <div class="bg-gray-50 p-3 rounded-xl border space-y-2 text-xs shadow-xs">
-                    <div class="flex justify-between items-center border-b pb-1">
-                        <span class="font-bold text-gray-600">🕒 ${new Date(o.Timestamp || Date.now()).toLocaleString()}</span>
-                        <span class="px-2 py-0.5 rounded-full font-bold ${getBadgeColor(o.Status)}">${o.Status || 'လက်ခံရရှိထားပါသည်'}</span>
-                    </div>
-                    <div><strong>ပစ္စည်းများ:</strong> ${o.Items || ''}</div>
-                    <div><strong>ကုန်ဖိုး:</strong> ${Number(sub || 0).toLocaleString()} ကျပ်</div>
-                    <div><strong>ပို့ဆောင်ခ:</strong> ${Number(del || 0).toLocaleString()} ကျပ်</div>
-                    <div class="flex justify-between font-bold text-red-600 pt-1 border-t">
-                        <span>စုစုပေါင်းငွေ:</span>
-            <span>${Number(o.TotalAmount || o['Total Amount'] || 0).toLocaleString()} ကျပ်</span>
-                    </div>
-                </div>
-            `;
-        }).join('');
+            try {
+                let res = await fetch(`${API_URL}?action=track&phone=${phone}`);
+                let data = await res.json();
+                let orders = data.orders || [];
 
-    } catch (err) {
-        console.error(err);
-        resultDiv.innerHTML = `<p class="text-center text-red-500 py-4 text-xs">အချက်အလက် ရယူရာတွင် အမှားအယွင်းရှိပါသည်။</p>`;
-    }
-}
+                if (orders.length === 0) {
+                    resultDiv.innerHTML = `<p class="text-center text-red-500 py-4 text-xs">ဤဖုန်းနံပါတ်ဖြင့် အော်ဒါမတွေ့ရှိပါ။</p>`;
+                    return;
+                }
+
+                resultDiv.innerHTML = orders.reverse().map(o => {
+                    function findVal(keywords) {
+                        for (let k in o) {
+                            let lk = k.toLowerCase();
+                            if (keywords.some(kw => lk.includes(kw))) {
+                                let val = o[k];
+                                if (val !== undefined && val !== null && val !== '') return val;
+                            }
+                        }
+                        return 0;
+                    }
+
+                    let sub = findVal(['subtotal', 'ကုန်ဖိုး']);
+                    let del = findVal(['delivery', 'ဒလီ', 'ပို့ဆောင်ခ']);
+                    let tot = findVal(['total', 'စုစုပေါင်း']);
+
+                    return `
+                        <div class="bg-gray-50 p-3 rounded-xl border space-y-2 text-xs shadow-xs">
+                            <div class="flex justify-between items-center border-b pb-1">
+                                <span class="font-bold text-gray-600">🕒 ${new Date(o.Timestamp || Date.now()).toLocaleString()}</span>
+                                <span class="px-2 py-0.5 rounded-full font-bold ${getBadgeColor(o.Status)}">${o.Status || 'လက်ခံရရှိထားပါသည်'}</span>
+                            </div>
+                            <div><strong>ဆိုင်:</strong> ${o.ShopID || 'Shop1'}</div>
+                            <div><strong>ပစ္စည်းများ:</strong> ${o.Items || ''}</div>
+                            <div><strong>ကုန်ဖိုး:</strong> ${Number(sub || 0).toLocaleString()} ကျပ်</div>
+                            <div><strong>ပို့ဆောင်ခ:</strong> ${Number(del || 0).toLocaleString()} ကျပ်</div>
+                            <div class="flex justify-between font-bold text-red-600 pt-1 border-t">
+                                <span>စုစုပေါင်းငွေ:</span>
+                                <span>${Number(o.TotalAmount || o['Total Amount'] || 0).toLocaleString()} ကျပ်</span>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+
+            } catch (err) {
+                console.error(err);
+                resultDiv.innerHTML = `<p class="text-center text-red-500 py-4 text-xs">အချက်အလက် ရယူရာတွင် အမှားအယွင်းရှိပါသည်။</p>`;
+            }
+        }
 
         function getBadgeColor(status) {
             if (!status) return 'bg-yellow-100 text-yellow-700';
@@ -346,7 +350,8 @@
 
         async function fetchData() {
             try {
-                let resProd = await fetch(API_URL);
+                // URL မှ shop parameter ကို ထည့်သွင်း၍ မီနူးများကို တောင်းခံမည်
+                let resProd = await fetch(`${API_URL}?shop=${currentShop}`);
                 let dataProd = await resProd.json();
                 products = dataProd.products || [];
                 renderProducts();
@@ -359,7 +364,7 @@
         function renderProducts() {
             const list = document.getElementById('product-list');
             if (!products || products.length === 0) {
-                list.innerHTML = `<p class="col-span-2 text-center text-gray-400 py-4">မီနူးများ ရယူနေပါသည်...</p>`;
+                list.innerHTML = `<p class="col-span-2 text-center text-gray-400 py-4">ဤဆိုင်အတွက် မီနူးများ မရှိသေးပါ။</p>`;
                 return;
             }
             list.innerHTML = products.map(p => `
@@ -500,7 +505,9 @@
 
             let totalAmount = currentSubtotal + currentDeliveryFee;
 
+            // အော်ဒါတင်သည့်အခါ shopID ကိုပါ ထည့်သွင်းပေးခြင်း
             let orderData = {
+                shopID: currentShop, 
                 name: name,
                 phone: phone,
                 ward: ward,
@@ -520,13 +527,11 @@
                 });
                 let result = await response.json();
                 
-                // ဒေတာ အောင်မြင်စွာ ဝင်သွားပါက
                 alert("အော်ဒါအောင်မြင်စွာ တင်ပြီးပါပြီ!");
                 location.reload();
 
             } catch (err) {
                 console.error(err);
-                // JSON parse error တက်ရင်တောင် Sheet ထဲ Data ရောက်သွားပြီဆိုရင် အောင်မြင်တယ်လို့ ယူဆပြီး reload လုပ်ပေးရန်
                 alert("အော်ဒါအောင်မြင်စွာ တင်ပြီးပါပြီ!");
                 location.reload();
             }
