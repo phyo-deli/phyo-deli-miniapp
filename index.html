@@ -145,11 +145,11 @@
         const urlParams = new URLSearchParams(window.location.search);
         const tg = window.Telegram && window.Telegram.WebApp ? window.Telegram.WebApp : null;
 
-        let shopParam = 'Shop1';
+        let shopParam = 'myawlinttle';
         if (tg && tg.initDataUnsafe && tg.initDataUnsafe.start_param) {
             shopParam = tg.initDataUnsafe.start_param;
         } else {
-            shopParam = urlParams.get('shop') || 'Shop1';
+            shopParam = urlParams.get('shop') || 'myawlinttle';
         }
 
         const currentShop = shopParam;
@@ -161,6 +161,7 @@
 
         let shopWard = 'မြိုင်သာယာရပ်ကွက်';
         let shopZone = 'B';
+        let sheetRates = []; // Google Sheet မှ တိုက်ရိုက်ရမည့် Delivery_Rates များ
 
         let wardZones = {
             'A': ['မန္တလေးရပ်ကွက်','ဖက်တန်းရပ်ကွက်','ရွှေတောင်ရပ်ကွက်','စစ်ကဲကုန်းရပ်ကွက်','မရမ်းကုန်းရပ်ကွက်','ပန်းပဲတန်းရပ်ကွက်','ဘိုကုန်းရပ်ကွက်','မောင်ငံရပ်ကွက်'],
@@ -172,27 +173,11 @@
             'G': ['စက်မှုဇုန်ရပ်ကွက်','ညောင်ပင်ဆိပ်ရပ်ကွက်']
         };
 
-        let deliveryRates = {
-            "A-B": { express: 4500, normal: 3000 }, "B-A": { express: 4500, normal: 3000 },
-            "A-C": { express: 4500, normal: 3000 }, "C-A": { express: 4500, normal: 3000 },
-            "A-D": { express: 5500, normal: 3500 }, "D-A": { express: 5500, normal: 3500 },
-            "A-E": { express: 9000, normal: 4500 }, "E-A": { express: 9000, normal: 4500 },
-            "A-F": { express: 9000, normal: 4500 }, "F-A": { express: 9000, normal: 4500 },
-            "A-G": { express: 9000, normal: 4500 }, "G-A": { express: 9000, normal: 4500 },
-            "B-E": { express: 6500, normal: 4000 }, "E-B": { express: 6500, normal: 4000 },
-            "B-F": { express: 6500, normal: 4000 }, "F-B": { express: 6500, normal: 4000 },
-            "B-G": { express: 6500, normal: 4000 }, "G-B": { express: 6500, normal: 4000 },
-            "C-D": { express: 6500, normal: 4000 }, "D-C": { express: 6500, normal: 4000 },
-            "C-E": { express: 9000, normal: 4500 }, "E-C": { express: 9000, normal: 4500 },
-            "C-F": { express: 9000, normal: 4500 }, "F-C": { express: 9000, normal: 4500 },
-            "C-G": { express: 9000, normal: 4500 }, "G-C": { express: 9000, normal: 4500 },
-            "D-E": { express: 5500, normal: 3500 }, "E-D": { express: 5500, normal: 3500 },
-            "D-F": { express: 9000, normal: 4500 }, "F-D": { express: 9000, normal: 4500 },
-            "D-G": { express: 9000, normal: 4500 }, "G-D": { express: 9000, normal: 4500 },
-            "E-F": { express: 9000, normal: 4500 }, "F-E": { express: 9000, normal: 4500 },
-            "E-G": { express: 9000, normal: 4500 }, "G-E": { express: 9000, normal: 4500 },
-            "F-G": { express: 6500, normal: 4000 }, "G-F": { express: 6500, normal: 4000 }
-        };
+        // Zone-A, Zone-B စသည်တို့မှ A, B သီးသန့်ထုတ်ယူပေးမည့် Helper Function
+        function normalizeZone(z) {
+            if (!z) return 'B';
+            return String(z).replace(/Zone-/i, '').replace(/Zone\s*/i, '').trim().toUpperCase();
+        }
 
         function switchTab(tab) {
             const secOrder = document.getElementById('section-order');
@@ -259,7 +244,7 @@
                                 <span class="font-bold text-gray-600">🕒 ${new Date(o.Timestamp || Date.now()).toLocaleString()}</span>
                                 <span class="px-2 py-0.5 rounded-full font-bold ${getBadgeColor(o.Status)}">${o.Status || 'လက်ခံရရှိထားပါသည်'}</span>
                             </div>
-                            <div><strong>ဆိုင်:</strong> ${o.ShopID || 'Shop1'}</div>
+                            <div><strong>ဆိုင်:</strong> ${o.ShopID || currentShop}</div>
                             <div><strong>ပစ္စည်းများ:</strong> ${o.Items || ''}</div>
                             <div><strong>ကုန်ဖိုး:</strong> ${Number(sub || 0).toLocaleString()} ကျပ်</div>
                             <div><strong>ပို့ဆောင်ခ:</strong> ${Number(del || 0).toLocaleString()} ကျပ်</div>
@@ -363,48 +348,43 @@
                 products = dataProd.products || [];
                 renderProducts();
 
-                // 2. Google Sheet မှ Wards, Rates နှင့် Shops ဒေတာများကို ရယူပြီး ရင်းနှီးစွာ ချိတ်ဆက်ရန်
+                // 2. Google Sheet မှ Wards, Rates နှင့် Shops ဒေတာများကို တိုက်ရိုက်ရယူရန်
                 let resZones = await fetch(`${API_URL}?action=zones`);
                 let dataZones = await resZones.json();
                 
+                // Sheet ထဲက Ward_Name နှင့် Zone_ID ကို ဖတ်ယူခြင်း
                 if (dataZones.wards && dataZones.wards.length > 0) {
                     let dynamicWards = {};
                     dataZones.wards.forEach(w => {
-                        let zoneName = w.Zone || w.zone || 'B';
-                        let wardName = w.Ward || w.ward;
+                        let rawZone = w.Zone_ID || w.Zone || w.zone || 'B';
+                        let zoneName = normalizeZone(rawZone);
+                        let wardName = w.Ward_Name || w.Ward || w.ward;
                         if (wardName) {
                             if (!dynamicWards[zoneName]) dynamicWards[zoneName] = [];
-                            dynamicWards[zoneName].push(wardName);
+                            dynamicWards[zoneName].push(wardName.trim());
                         }
                     });
                     if (Object.keys(dynamicWards).length > 0) wardZones = dynamicWards;
                 }
 
+                // Sheet ထဲက Delivery_Rates ဇယားတစ်ခုလုံးကို သိမ်းဆည်းခြင်း
                 if (dataZones.rates && dataZones.rates.length > 0) {
-                    let dynamicRates = {};
-                    dataZones.rates.forEach(r => {
-                        let routeKey = r.Route || r.route || `${r.FromZone}-${r.ToZone}`;
-                        if (routeKey) {
-                            dynamicRates[routeKey] = {
-                                express: Number(r.ExpressFee || r.express || 4000),
-                                normal: Number(r.NormalFee || r.normal || 3000)
-                            };
-                        }
-                    });
-                    if (Object.keys(dynamicRates).length > 0) deliveryRates = dynamicRates;
+                    sheetRates = dataZones.rates;
                 }
 
+                // Sheet ထဲက Shops ဇယားမှ လက်ရှိဆိုင်၏ Ward နှင့် Zone ကို ရှာဖွေခြင်း
                 if (dataZones.shops) {
                     let foundShop = dataZones.shops.find(s => 
                         String(s.ShopID || s.ID).toLowerCase().trim() === String(currentShop).toLowerCase().trim()
                     );
                     if (foundShop) {
-                        shopWard = foundShop.Ward || 'မြိုင်သာယာရပ်ကွက်';
-                        shopZone = foundShop.Zone || 'B';
+                        shopWard = (foundShop.Ward || 'မြိုင်သာယာရပ်ကွက်').trim();
+                        shopZone = normalizeZone(foundShop.Zone || 'B');
                     }
                 }
                 
                 renderWards();
+                calculateTotal();
             } catch (err) {
                 console.error("Error loading data:", err);
                 renderWards();
@@ -419,9 +399,9 @@
             }
             list.innerHTML = products.map(p => `
                 <div class="bg-gray-50 p-2.5 rounded-xl border flex flex-col justify-between hover:shadow-md transition">
-                    <img src="${p.ImageURL}" class="w-full h-28 object-cover rounded-lg mb-2">
+                    <img src="${p.ImageURL || 'https://via.placeholder.com/150'}" class="w-full h-28 object-cover rounded-lg mb-2">
                     <h3 class="font-semibold text-xs text-gray-800 line-clamp-2">${p.ItemName}</h3>
-                    <p class="text-red-600 font-bold text-xs my-1">${p.Price} ကျပ်</p>
+                    <p class="text-red-600 font-bold text-xs my-1">${Number(p.Price).toLocaleString()} ကျပ်</p>
                     <div class="flex items-center justify-between bg-white border rounded-lg p-1 shadow-xs">
                         <button onclick="updateQty('${p.ItemID}', -1)" class="w-6 h-6 flex items-center justify-center bg-gray-100 rounded-md font-bold text-gray-600 hover:bg-gray-200">-</button>
                         <span id="qty-${p.ItemID}" class="text-xs font-bold">${cart[p.ItemID] ? cart[p.ItemID].qty : 0}</span>
@@ -433,6 +413,7 @@
 
         function renderWards() {
             const select = document.getElementById('ward-select');
+            const currentVal = select.value;
             let html = '<option value="">ရပ်ကွက် ရွေးပါ...</option>';
             for (let z in wardZones) {
                 wardZones[z].forEach(w => {
@@ -440,6 +421,7 @@
                 });
             }
             select.innerHTML = html;
+            if (currentVal) select.value = currentVal;
         }
 
         function updateQty(itemID, change) {
@@ -472,6 +454,43 @@
             return 'B';
         }
 
+        // Google Sheet ထဲရှိ Delivery_Rates ဇယားမှ နှုန်းထားအမှန်ကို ရှာဖွေတွက်ချက်ပေးမည့် Function
+        function getFeeFromSheet(fromZ, toZ, serviceType, isSameWard) {
+            if (!sheetRates || sheetRates.length === 0) return null;
+
+            const targetService = serviceType === 'express' ? 'အမြန်ပို့' : 'ပုံမှန်ပို့';
+
+            // ၁။ ရပ်ကွက်ထဲပို့ ဖြစ်ပါက "ရပ်ကွက်ထဲပို့" ပါသော နှုန်းထားကို အရင်ရှာမည်
+            if (isSameWard) {
+                let sameWardMatch = sheetRates.find(r => {
+                    let fZ = normalizeZone(r.From_Zone);
+                    let tZ = normalizeZone(r.To_Zone);
+                    let sType = String(r.Service_Type || '').trim();
+                    return fZ === fromZ && tZ === toZ && sType.includes('ရပ်ကွက်ထဲပို့') && sType.includes(targetService);
+                });
+                if (sameWardMatch && sameWardMatch.Fee !== undefined) {
+                    return Number(sameWardMatch.Fee);
+                }
+            }
+
+            // ၂။ ပုံမှန် Zone တစ်ခုမှ တစ်ခုသို့ (သို့) ဇုန်တူ ရပ်ကွက်မတူ နှုန်းထားကို ရှာမည်
+            let match = sheetRates.find(r => {
+                let fZ = normalizeZone(r.From_Zone);
+                let tZ = normalizeZone(r.To_Zone);
+                let sType = String(r.Service_Type || '').trim();
+                // ရပ်ကွက်ထဲပို့ မဟုတ်သော ရိုးရိုး အမြန်ပို့ / ပုံမှန်ပို့ ကိုရှာမည်
+                return ((fZ === fromZ && tZ === toZ) || (fZ === toZ && tZ === fromZ)) && 
+                       !sType.includes('ရပ်ကွက်ထဲပို့') && 
+                       sType.includes(targetService);
+            });
+
+            if (match && match.Fee !== undefined) {
+                return Number(match.Fee);
+            }
+
+            return null;
+        }
+
         function calculateTotal() {
             const cartList = document.getElementById('cart-items-list');
             const cartBadge = document.getElementById('cart-count-badge');
@@ -489,7 +508,7 @@
                         <div class="flex justify-between items-center border-b pb-1.5 text-xs">
                             <div>
                                 <span class="font-medium text-gray-800">${item.ItemName}</span>
-                                <span class="text-gray-400 ml-1">(${item.Price} x ${item.qty})</span>
+                                <span class="text-gray-400 ml-1">(${Number(item.Price).toLocaleString()} x ${item.qty})</span>
                             </div>
                             <span class="font-bold text-red-600">${itemTotal.toLocaleString()} ကျပ်</span>
                         </div>
@@ -504,35 +523,36 @@
             const selectedOption = wardSelect.options[wardSelect.selectedIndex];
             const serviceType = document.getElementById('service-select').value;
 
-            // ရပ်ကွက်နှင့် ပို့ဆောင်မှုအမျိုးအစား အပြည့်အစုံ ရွေးထားမှသာ ပို့ဆောင်ခကို တွက်မည်
             if (selectedOption && selectedOption.value && serviceType) {
-                const customerWard = selectedOption.value;
-                const customerZone = selectedOption.getAttribute('data-zone') || getZone(customerWard);
+                const customerWard = selectedOption.value.trim();
+                const customerZone = normalizeZone(selectedOption.getAttribute('data-zone') || getZone(customerWard));
+                const isSameWard = (shopWard === customerWard);
                 const isAdj = checkAdjacent(shopWard, customerWard);
 
-                if (shopZone === customerZone || isAdj) {
-                    if (serviceType === 'express') currentDeliveryFee = 3500;
-                    else currentDeliveryFee = 2500;
+                // Google Sheet မှ နှုန်းထားကို ဦးစားပေး ရှာဖွေမည်
+                let dynamicFee = getFeeFromSheet(shopZone, customerZone, serviceType, isSameWard);
+
+                if (dynamicFee !== null) {
+                    currentDeliveryFee = dynamicFee;
                 } else {
-                    let key1 = `${shopZone}-${customerZone}`;
-                    let key2 = `${customerZone}-${shopZone}`;
-                    let rateObj = deliveryRates[key1] || deliveryRates[key2];
-                    if (rateObj) {
-                        currentDeliveryFee = rateObj[serviceType] || (serviceType === 'express' ? 4500 : 3000);
+                    // Sheet ထဲတွင် ရှာမတွေ့ပါက အရန် (Fallback) တွက်ချက်မှု
+                    if (isSameWard) {
+                        currentDeliveryFee = serviceType === 'express' ? 2000 : 1000;
+                    } else if (shopZone === customerZone || isAdj) {
+                        currentDeliveryFee = serviceType === 'express' ? 2500 : 1500;
                     } else {
-                        currentDeliveryFee = 4000;
+                        currentDeliveryFee = serviceType === 'express' ? 4500 : 2500;
                     }
                 }
 
                 cartList.innerHTML += `
                     <div class="flex justify-between items-center pt-1 text-gray-500 text-xs font-semibold">
-                        <span>🚚 ပို့ဆောင်ခ (${selectedOption.value})</span>
+                        <span>🚚 ပို့ဆောင်ခ (${customerWard} - Zone ${customerZone})</span>
                         <span class="font-bold text-gray-700">${currentDeliveryFee.toLocaleString()} ကျပ်</span>
                     </div>
                 `;
             }
 
-            // ရပ်ကွက်မရွေးရသေးပါက ပို့ဆောင်ခ 0 ဖြင့်သာ စုစုပေါင်းတွက်မည်
             let grandTotal = currentSubtotal + (selectedOption && selectedOption.value && serviceType ? currentDeliveryFee : 0);
             document.getElementById('total-price').innerText = grandTotal.toLocaleString() + " ကျပ်";
         }
